@@ -23,6 +23,7 @@ if (!defined('SMTP_PASS')) define('SMTP_PASS', '');
 
 // Optional free Groq key (console.groq.com, no credit card). Leave empty to use the built-in free agent.
 if (!defined('GROQ_API_KEY')) define('GROQ_API_KEY', (string) (getenv('GROQ_API_KEY') ?: ''));
+if (!defined('GEMINI_API_KEY')) define('GEMINI_API_KEY', (string) (getenv('GEMINI_API_KEY') ?: ''));
 
 if (!defined('OTP_TTL_SECONDS')) define('OTP_TTL_SECONDS', 600);
 if (!defined('OTP_RESEND_SECONDS')) define('OTP_RESEND_SECONDS', 60);

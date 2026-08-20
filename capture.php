@@ -52,10 +52,20 @@ if ($notes !== '' && $notes !== sample_resume_text()) {
     $imported .= "\n\n----\n\nEXISTING NOTES\n" . $notes;
 }
 
+$incoming = moderate_profile_text($imported);
+if (!$incoming['allow']) {
+    json_error(moderation_message($incoming), 422, ['alerts' => $incoming['alerts']]);
+}
+
 try {
     $resume = ai_improve_resume($imported, 'from_profile');
 } catch (Throwable $e) {
     json_error($e->getMessage());
+}
+
+$outgoing = moderate_profile_text($resume);
+if (!$outgoing['allow']) {
+    json_error('The generated résumé was not safe to use. ' . moderation_message($outgoing), 422, ['alerts' => $outgoing['alerts']]);
 }
 
 json_ok([

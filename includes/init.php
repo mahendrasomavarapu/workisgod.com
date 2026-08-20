@@ -11,8 +11,10 @@ require __DIR__ . '/auth.php';
 require __DIR__ . '/parser.php';
 require __DIR__ . '/resume.php';
 require __DIR__ . '/ai.php';
+require __DIR__ . '/moderate.php';
 require __DIR__ . '/capture.php';
 require __DIR__ . '/layout.php';
+require __DIR__ . '/toolset.php';
 
 ini_set('display_errors', '0');
 ini_set('log_errors', '1');
@@ -51,7 +53,12 @@ header('X-Frame-Options: SAMEORIGIN');
 header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: strict-origin-when-cross-origin');
 header('Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=()');
-header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; child-src https://challenges.cloudflare.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests");
+$connectSrc = "'self' https://challenges.cloudflare.com";
+if (basename((string) ($_SERVER['SCRIPT_NAME'] ?? '')) === 'tools.php') {
+    // The curl tool issues CORS fetches from the visitor’s browser only.
+    $connectSrc = "'self' https: http: https://challenges.cloudflare.com";
+}
+header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src $connectSrc; frame-src https://challenges.cloudflare.com; child-src https://challenges.cloudflare.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests");
 if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
     header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
 }

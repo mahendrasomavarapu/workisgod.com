@@ -73,6 +73,7 @@ function render_header(string $title, array $opts = []): void
     <a class="wordmark" href="/"><?= h(SITE_NAME) ?></a>
     <nav>
         <a href="/about.php">About</a>
+        <a href="/tools.php">Tools</a>
         <a href="/safety.php">Safety</a>
         <label class="sr-only" for="site-theme">Site theme</label>
         <select id="site-theme" class="site-theme" aria-label="Site theme">
@@ -99,15 +100,21 @@ function render_header(string $title, array $opts = []): void
     endif;
 }
 
-function render_footer(): void
+function render_footer(array $opts = []): void
 {
     ?>
 <footer class="site-footer">
     <p><?= h(SITE_NAME) ?> · your work is received with care</p>
-    <p class="fine"><a href="/about.php">About</a> · <a href="/safety.php">Safety</a> · <a href="/llms.txt">llms.txt</a></p>
+    <p class="fine"><a href="/about.php">About</a> · <a href="/tools.php">Tools</a> · <a href="/safety.php">Safety</a> · <a href="/llms.txt">llms.txt</a></p>
 </footer>
 <script src="<?= h(asset_url('/assets/js/app.js')) ?>"></script>
-<?php if (captcha_enabled()): ?>
+<?php
+    if (!empty($opts['scripts']) && is_array($opts['scripts'])) {
+        foreach ($opts['scripts'] as $src) {
+            echo '<script src="' . h(asset_url((string) $src)) . '"></script>' . "\n";
+        }
+    }
+    if (captcha_enabled()): ?>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <?php endif; ?>
 </body>

@@ -14,6 +14,7 @@ RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 # Public resume URLs
 RewriteRule ^resumes/([A-Za-z0-9-]+)/?$ public.php?slug=$1 [L,QSA]
 RewriteRule ^r/([A-Za-z0-9-]+)/?$ /resumes/$1 [L,R=301]
+RewriteRule ^tools/?$ tools.php [L,QSA]
 
 # Block hidden files, but keep /.well-known/ for SSL.
 RewriteCond %{REQUEST_URI} !^/\.well-known/

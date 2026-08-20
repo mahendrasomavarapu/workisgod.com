@@ -43,7 +43,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 render_header('Sign in', ['body' => 'page-auth']);
 ?>
 <a class="admin-corner" href="/admin/login.php">Admin</a>
-<main id="main" class="wrap auth-wrap">
+<main id="main">
+<div class="wrap auth-wrap">
     <section class="auth-card">
         <p class="eyebrow">Your table</p>
         <h1><?= $stage === 'otp' ? 'Your code is waiting' : 'Be received' ?></h1>
@@ -82,6 +83,10 @@ render_header('Sign in', ['body' => 'page-auth']);
             </form>
         <?php endif; ?>
     </section>
+</div>
+<div class="wrap">
+    <?php render_tools_promo('Sign in, or use the bench while you wait.'); ?>
+</div>
 </main>
 <?php
 render_footer();

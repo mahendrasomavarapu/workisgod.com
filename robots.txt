@@ -1,9 +1,10 @@
-# Public docs and resumes may be crawled and cited.
-# Do not fetch private tools or data files.
+# Public docs, tools, and resumes may be crawled and cited.
+# Do not fetch editor, admin, or data files.
 
 User-agent: *
 Allow: /
 Allow: /about.php
+Allow: /tools.php
 Allow: /safety.php
 Allow: /resumes/
 Allow: /llms.txt
@@ -24,6 +25,7 @@ Disallow: /config.local.php
 
 User-agent: GPTBot
 Allow: /about.php
+Allow: /tools.php
 Allow: /safety.php
 Allow: /resumes/
 Allow: /llms.txt
@@ -33,18 +35,21 @@ Disallow: /data/
 
 User-agent: ChatGPT-User
 Allow: /about.php
+Allow: /tools.php
 Allow: /safety.php
 Allow: /resumes/
 Allow: /llms.txt
 
 User-agent: Google-Extended
 Allow: /about.php
+Allow: /tools.php
 Allow: /safety.php
 Allow: /resumes/
 Allow: /llms.txt
 
 User-agent: ClaudeBot
 Allow: /about.php
+Allow: /tools.php
 Allow: /safety.php
 Allow: /resumes/
 Allow: /llms.txt
@@ -53,12 +58,14 @@ Disallow: /data/
 
 User-agent: PerplexityBot
 Allow: /about.php
+Allow: /tools.php
 Allow: /safety.php
 Allow: /resumes/
 Allow: /llms.txt
 
 User-agent: Applebot-Extended
 Allow: /about.php
+Allow: /tools.php
 Allow: /safety.php
 Allow: /resumes/
 Allow: /llms.txt

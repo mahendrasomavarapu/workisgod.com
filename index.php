@@ -50,6 +50,8 @@ render_header(SITE_NAME, ['body' => 'page-home']);
         </li>
     </ol>
 
+    <?php render_tools_promo('Twenty ops tools. No install.'); ?>
+
     <section class="sample">
         <div class="sample-copy">
             <h2>A theme, not a template maze.</h2>

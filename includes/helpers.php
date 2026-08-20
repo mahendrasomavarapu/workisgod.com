@@ -86,11 +86,11 @@ function iso_now(): string
     return gmdate('c');
 }
 
-function json_error(string $message, int $code = 400): never
+function json_error(string $message, int $code = 400, array $extra = []): never
 {
     http_response_code($code);
     header('Content-Type: application/json; charset=utf-8');
-    echo json_encode(['ok' => false, 'error' => $message]);
+    echo json_encode(['ok' => false, 'error' => $message] + $extra);
     exit;
 }
 

@@ -7,6 +7,7 @@ require __DIR__ . '/includes/init.php';
 $user = require_login();
 $resume = user_resume((int) $user['id']);
 $error = '';
+$alerts = [];
 $useAi = false;
 
 $slug = $resume['slug'] ?? slugify(explode('@', $user['email'])[0]);
@@ -53,6 +54,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } catch (Throwable $e) {
             $error = $e->getMessage();
             $text = $notes;
+        }
+    }
+
+    if ($error === '' && $intent !== 'restore') {
+        $mod = moderate_profile_text($text);
+        $alerts = $mod['alerts'];
+        if (!$mod['allow']) {
+            $error = moderation_message($mod);
         }
     }
 
@@ -109,7 +118,17 @@ render_header('My resume', ['body' => 'page-editor']);
     </header>
 
     <?php if ($error): ?>
-        <p class="form-error"><?= h($error) ?></p>
+        <p class="form-error" role="alert"><?= h($error) ?></p>
+    <?php endif; ?>
+    <?php if ($alerts): ?>
+        <div class="alert-box" role="alert">
+            <p><strong>Please revise before publishing.</strong></p>
+            <ul>
+                <?php foreach ($alerts as $alert): ?>
+                    <li><?= h($alert) ?></li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
     <?php endif; ?>
 
     <form method="post" enctype="multipart/form-data" class="editor-grid" id="resume-form">

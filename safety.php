@@ -22,9 +22,11 @@ render_header('Safety', [
         <li>Your public URL <code>/resumes/your-slug</code> is visible to anyone with the link. Do not put national IDs, bank details, home addresses, or unpublished phone numbers in the resume text.</li>
         <li>LinkedIn often blocks automated reads. Prefer “Save as PDF” from LinkedIn and upload that file. Do not paste your LinkedIn password anywhere on this site.</li>
         <li>Review AI output before you save. The agent must not invent jobs, dates, or metrics. If it does, delete those lines.</li>
+        <li>Publishing is checked by Gemini for harmful or off-topic text. Censored wording is listed so you can revise. Unsafe drafts are not posted.</li>
         <li>Change the admin password after first login. Do not reuse that password on other sites.</li>
         <li>Sign out on shared computers.</li>
         <li>Deleting a resume or the whole account requires a fresh OTP sent to your email. Use Account in the header.</li>
+        <li>The <a href="/tools.php">Tools</a> bench runs in your browser. We do not receive that text. Still, do not paste production private keys, session cookies, or live access tokens — a shoulder, an extension, or a screenshot can leak them.</li>
     </ul>
 
     <h2>What is stored</h2>

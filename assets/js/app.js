@@ -101,7 +101,8 @@
       body: body.toString()
     }).then(function (r) { return r.json(); }).then(function (data) {
       if (!data || !data.ok) {
-        throw new Error((data && data.error) || "AI request failed");
+        const extra = (data && data.alerts && data.alerts.length) ? " " + data.alerts.join(" · ") : "";
+        throw new Error(((data && data.error) || "AI request failed") + extra);
       }
       const before = textarea.value;
       textarea.value = data.text;
@@ -145,7 +146,8 @@
         .then(function (r) { return r.json(); })
         .then(function (data) {
           if (!data || !data.ok) {
-            throw new Error((data && data.error) || "Could not capture that profile");
+            const extra = (data && data.alerts && data.alerts.length) ? " " + data.alerts.join(" · ") : "";
+            throw new Error(((data && data.error) || "Could not capture that profile") + extra);
           }
           textarea.value = data.text;
           textarea.classList.remove("ai-flash");
