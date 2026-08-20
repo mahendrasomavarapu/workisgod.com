@@ -1,0 +1,113 @@
+.resume {
+  background: #fff;
+  color: #1a1a1a;
+  padding: 48px 52px;
+  max-width: 800px;
+  margin: 0 auto;
+  box-shadow: 0 10px 40px rgba(40, 30, 10, .08);
+}
+.resume h1, .resume h2 { font-family: "Fraunces", Georgia, serif; font-weight: 650; }
+.resume h1 { font-size: 2.2rem; margin: 0 0 6px; letter-spacing: .01em; }
+.resume .headline { margin: 0 0 10px; color: #5a5246; font-size: 1.05rem; }
+.resume .contacts, .resume .meta { margin: 0; color: #4a453c; font-size: .95rem; }
+.resume .dot { margin: 0 .45em; color: #b3a78d; }
+.resume a { color: inherit; }
+.resume-hero { margin-bottom: 22px; padding-bottom: 16px; }
+.resume-section { margin: 0 0 18px; }
+.resume-section h2 {
+  font-size: .78rem;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  margin: 0 0 8px;
+}
+.resume p { margin: 0 0 8px; }
+.resume ul { margin: 4px 0 10px; padding-left: 1.1rem; }
+.resume li { margin: 0 0 4px; }
+.resume .gap { height: 8px; }
+
+.theme-classic .resume-hero { border-bottom: 2px solid #1b2a4a; }
+.theme-classic .resume-section h2 { color: #1b2a4a; border-bottom: 1px solid #d8d3c6; padding-bottom: 4px; }
+.theme-classic h1 { color: #1b2a4a; }
+
+.theme-modern { border-left: 8px solid #0f766e; padding-left: 44px; }
+.theme-modern h1 { font-family: "Source Sans 3", sans-serif; font-weight: 700; letter-spacing: -.02em; }
+.theme-modern .resume-section h2 { color: #0f766e; letter-spacing: .2em; }
+.theme-modern .resume-hero { border-bottom: 0; }
+
+.theme-minimal { box-shadow: none; padding: 36px 28px; }
+.theme-minimal h1 { font-weight: 500; }
+.theme-minimal .resume-hero { border-bottom: 1px solid #111; }
+.theme-minimal .resume-section h2 { color: #111; font-weight: 500; }
+
+.theme-acid {
+  background: #0b0b0b;
+  color: #d6ff3c;
+  box-shadow: none;
+  border: 2px solid #d6ff3c;
+}
+.theme-acid h1, .theme-acid h2 { font-family: "Source Sans 3", sans-serif; color: #d6ff3c; }
+.theme-acid .headline, .theme-acid .contacts, .theme-acid .meta { color: #b8d94a; }
+.theme-acid .resume-hero { border-bottom: 2px solid #d6ff3c; }
+.theme-acid .resume-section h2 { border-bottom: 1px solid #d6ff3c; letter-spacing: .2em; }
+
+.theme-brutal {
+  background: #fffbe6;
+  color: #111;
+  box-shadow: 8px 8px 0 #111;
+  border: 3px solid #111;
+}
+.theme-brutal h1 { color: #111; }
+.theme-brutal .resume-hero { border-bottom: 3px solid #111; }
+.theme-brutal .resume-section h2 {
+  display: inline-block;
+  background: #ff5ea8;
+  color: #111;
+  border: 2px solid #111;
+  padding: 2px 8px;
+  letter-spacing: 0;
+}
+
+.theme-midnight {
+  background: #0b1220;
+  color: #e8eefc;
+  box-shadow: none;
+  border: 1px solid #31456b;
+}
+.theme-midnight h1, .theme-midnight .resume-section h2 { color: #7dd3fc; }
+.theme-midnight .headline, .theme-midnight .contacts, .theme-midnight .meta { color: #9bb0d0; }
+.theme-midnight .resume-hero { border-bottom: 1px solid #31456b; }
+.theme-midnight .resume-section h2 { border-bottom: 1px solid #2a3d5c; }
+
+.theme-peach {
+  background: #fff5ef;
+  color: #4a2c2a;
+  border: 1px solid #f0c7b8;
+  box-shadow: none;
+}
+.theme-peach h1, .theme-peach .resume-section h2 { color: #c45c4a; }
+.theme-peach .headline, .theme-peach .contacts { color: #8a5d57; }
+.theme-peach .resume-hero { border-bottom: 1px solid #f0c7b8; }
+.theme-peach .resume-section h2 { border-bottom: 1px solid #f0c7b8; }
+
+.theme-vapor {
+  background: #f4f0ff;
+  color: #2a2140;
+  border: 1px solid #c9b8f0;
+  box-shadow: none;
+}
+.theme-vapor h1 { color: #6b4cff; }
+.theme-vapor .resume-section h2 { color: #00b3a4; border-bottom: 1px dashed #c9b8f0; }
+.theme-vapor .headline, .theme-vapor .contacts { color: #6d6290; }
+.theme-vapor .resume-hero { border-bottom: 1px dashed #c9b8f0; }
+
+body.theme-body-modern { background: #eef3f2; }
+body.theme-body-minimal { background: #fafafa; }
+body.theme-body-acid { background: #0b0b0b; }
+body.theme-body-brutal { background: #fff8d6; }
+body.theme-body-midnight { background: #070b14; }
+body.theme-body-peach { background: #fff4ee; }
+body.theme-body-vapor { background: #efeaff; }
+
+@media print {
+  .resume { box-shadow: none; max-width: none; padding: 0; border: 0; }
+}

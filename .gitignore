@@ -2,3 +2,9 @@
 .idea/
 .vscode/
 *.log
+data/*.sqlite
+data/*.sqlite-journal
+data/*.sqlite-wal
+data/*.sqlite-shm
+data/*.log
+config.local.php

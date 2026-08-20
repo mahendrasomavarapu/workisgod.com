@@ -1,0 +1,11 @@
+<?php
+// Copy to config.local.php on the server. This file is gitignored.
+
+define('SMTP_PASS', 'your-noreply-mailbox-password');
+
+define('ADMIN_BOOTSTRAP_EMAIL', 'admin@workisgod.com');
+define('ADMIN_BOOTSTRAP_PASSWORD', 'change-this-long-password');
+
+// Optional. The AI checkbox works without this (free built-in agent).
+// For a stronger rewrite, add a free Groq key from https://console.groq.com
+// define('GROQ_API_KEY', 'gsk_...');

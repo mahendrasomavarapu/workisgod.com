@@ -1,0 +1,30 @@
+DirectoryIndex index.php index.html
+Options -Indexes
+
+RewriteEngine On
+RewriteBase /
+
+# Force HTTPS when the host already has SSL (Namecheap usually does).
+RewriteCond %{HTTPS} !=on
+RewriteCond %{HTTP:X-Forwarded-Proto} !https
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Public resume URLs: /r/your-name
+RewriteRule ^r/([A-Za-z0-9-]+)/?$ public.php?slug=$1 [L,QSA]
+
+# Block hidden files, but keep /.well-known/ for SSL.
+RewriteCond %{REQUEST_URI} !^/\.well-known/
+RewriteRule (^|/)\. - [F,L]
+
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=()"
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+  Header always unset X-Powered-By
+</IfModule>
+
+<FilesMatch "^(config\.php|config\.local\.php)$">
+  Require all denied
+</FilesMatch>

@@ -1,0 +1,5 @@
+Contact: mailto:noreply@workisgod.com
+Expires: 2027-08-20T00:00:00.000Z
+Canonical: https://workisgod.com/.well-known/security.txt
+Preferred-Languages: en
+Policy: https://workisgod.com/safety.php

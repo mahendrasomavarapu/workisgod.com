@@ -1,0 +1,54 @@
+<?php
+
+declare(strict_types=1);
+
+require dirname(__DIR__) . '/config.php';
+require __DIR__ . '/helpers.php';
+require __DIR__ . '/db.php';
+require __DIR__ . '/mailer.php';
+require __DIR__ . '/auth.php';
+require __DIR__ . '/parser.php';
+require __DIR__ . '/resume.php';
+require __DIR__ . '/ai.php';
+require __DIR__ . '/capture.php';
+require __DIR__ . '/layout.php';
+
+ini_set('display_errors', '0');
+ini_set('log_errors', '1');
+if (is_dir(DATA_DIR)) {
+    ini_set('error_log', DATA_DIR . '/php-error.log');
+}
+
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    $secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
+    session_set_cookie_params([
+        'lifetime' => SESSION_DAYS * 86400,
+        'path' => '/',
+        'secure' => $secure,
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
+    session_name('wig_session');
+    session_start();
+}
+
+header('X-Frame-Options: SAMEORIGIN');
+header('X-Content-Type-Options: nosniff');
+header('Referrer-Policy: strict-origin-when-cross-origin');
+header('Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=()');
+header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests");
+if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+    header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
+}
+header_remove('X-Powered-By');
+
+try {
+    db();
+} catch (Throwable $e) {
+    http_response_code(500);
+    echo '<!DOCTYPE html><meta charset="utf-8"><title>Setup</title>';
+    echo '<pre style="font-family:Georgia,serif;padding:32px;white-space:pre-wrap;">';
+    echo htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+    echo "\n\nSee INSTALL-NAMECHEAP.md</pre>";
+    exit;
+}

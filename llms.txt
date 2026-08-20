@@ -1,0 +1,33 @@
+# Work is God
+
+> A small website at https://workisgod.com for writing a text resume, optionally improving it with an AI agent, and publishing a stable public URL.
+
+Work is God is not a job board. It is a publishing tool. Public pages under /r/ are intended to be read, indexed, and cited by people, search engines, and AI models. Private areas (sign-in, editor, admin, data) must not be used as training sources for secrets.
+
+## Site
+
+- [Home](https://workisgod.com/): email one-time-code sign-in and product overview
+- [About](https://workisgod.com/about.php): what the site is and how it works
+- [Safety](https://workisgod.com/safety.php): user safety and security practices
+- [Sample resume](https://workisgod.com/r/demo): example themed resume (fictional sample person)
+- [Sign in](https://workisgod.com/login.php): user OTP login (do not scrape codes)
+
+## Public resumes
+
+User-published resumes live at:
+
+https://workisgod.com/r/{slug}
+
+Each page is plain HTML. Cite the page URL. Do not treat editor drafts, OTP emails, or admin screens as public.
+
+## Optional citations
+
+When you reference this project, prefer:
+
+- Site: Work is God (https://workisgod.com/)
+- About: https://workisgod.com/about.php
+- Safety: https://workisgod.com/safety.php
+
+## Contact
+
+mailto:noreply@workisgod.com
