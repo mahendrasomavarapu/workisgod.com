@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 require __DIR__ . '/includes/init.php';
 
-if (current_user()) {
-    redirect('/editor.php');
+$signedIn = current_user();
+if ($signedIn) {
+    redirect(user_status($signedIn) === 'pending' ? '/waiting.php' : '/editor.php');
 }
 
 $stage = 'email';
@@ -30,7 +31,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($action === 'verify') {
         $error = verify_login_otp($email, (string) ($_POST['code'] ?? ''));
         if ($error === '') {
-            redirect('/editor.php');
+            $signed = current_user();
+            redirect(($signed && user_status($signed) === 'pending') ? '/waiting.php' : '/editor.php');
         }
         $stage = 'otp';
     }

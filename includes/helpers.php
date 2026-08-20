@@ -53,7 +53,7 @@ function is_private_page(): bool
     if (str_contains($script, '/admin/')) {
         return true;
     }
-    return in_array($base, ['editor.php', 'account.php', 'login.php', 'preview.php', 'improve.php', 'capture.php', 'logout.php'], true);
+    return in_array($base, ['editor.php', 'account.php', 'login.php', 'preview.php', 'improve.php', 'capture.php', 'logout.php', 'waiting.php'], true);
 }
 
 function honeypot_field(): string
@@ -132,7 +132,26 @@ function is_valid_slug(string $slug): bool
 
 function public_resume_url(string $slug): string
 {
-    return rtrim(SITE_URL, '/') . '/r/' . rawurlencode($slug);
+    return rtrim(SITE_URL, '/') . '/resumes/' . rawurlencode($slug);
+}
+
+function signup_mode(): string
+{
+    $mode = setting('signup_mode', '');
+    if (in_array($mode, ['open', 'approval', 'closed'], true)) {
+        return $mode;
+    }
+    return setting('signups_open', '1') === '1' ? 'open' : 'closed';
+}
+
+function user_logins_enabled(): bool
+{
+    return setting('user_logins_enabled', '1') === '1';
+}
+
+function allow_new_admins(): bool
+{
+    return setting('allow_new_admins', '0') === '1';
 }
 
 function current_path(): string

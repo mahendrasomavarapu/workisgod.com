@@ -22,7 +22,7 @@ render_header('About', [
         <li>Paste text, upload a <code>.txt</code> file, import a LinkedIn or other public URL, or upload a PDF.</li>
         <li>Optionally run a free AI agent to rewrite the draft, including a harder-thinking pass.</li>
         <li>Choose site and resume themes aimed at Gen Z and millennial palettes, plus quieter classic looks.</li>
-        <li>Publish at <code>https://workisgod.com/r/your-name</code>.</li>
+        <li>Publish at <code>https://workisgod.com/resumes/your-name</code>.</li>
     </ul>
 
     <h2>How it is built</h2>
@@ -31,7 +31,7 @@ render_header('About', [
     <h2>For people, not a maze of templates</h2>
     <p>Write the way you already write. Headings like SUMMARY and EXPERIENCE, lines with <code>|</code>, and dash bullets become a readable page. You can edit anytime. The share URL stays the same unless you change the slug.</p>
 
-    <p><a class="button" href="/login.php">Sign in and write</a> <a class="text-link" href="/r/demo">See a sample resume</a></p>
+    <p><a class="button" href="/login.php">Sign in and write</a> <a class="text-link" href="/resumes/demo">See a sample resume</a></p>
 </main>
 <?php
 render_footer();

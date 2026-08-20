@@ -112,6 +112,8 @@ button.danger {
   border-color: var(--danger);
   color: #fff;
 }
+.inline-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.inline-actions button { padding: 6px 10px; font-size: .85rem; }
 
 .flash {
   width: min(1120px, calc(100% - 32px));

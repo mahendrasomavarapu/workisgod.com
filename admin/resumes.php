@@ -30,7 +30,7 @@ render_admin_header('Resumes', 'resumes');
         <?php foreach ($rows as $row): ?>
             <tr>
                 <td><?= h($row['email']) ?></td>
-                <td><a href="/r/<?= h($row['slug']) ?>" target="_blank" rel="noopener">/r/<?= h($row['slug']) ?></a></td>
+                <td><a href="/resumes/<?= h($row['slug']) ?>" target="_blank" rel="noopener">/resumes/<?= h($row['slug']) ?></a></td>
                 <td><?= h($row['theme']) ?></td>
                 <td><?= !empty($row['ai_used']) ? 'yes' : 'no' ?></td>
                 <td><?= (int) $row['chars'] ?></td>

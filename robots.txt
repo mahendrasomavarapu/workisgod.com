@@ -5,7 +5,7 @@ User-agent: *
 Allow: /
 Allow: /about.php
 Allow: /safety.php
-Allow: /r/
+Allow: /resumes/
 Allow: /llms.txt
 Allow: /sitemap.xml
 Disallow: /editor.php
@@ -15,6 +15,7 @@ Disallow: /improve.php
 Disallow: /capture.php
 Disallow: /logout.php
 Disallow: /account.php
+Disallow: /waiting.php
 Disallow: /admin/
 Disallow: /data/
 Disallow: /includes/
@@ -24,7 +25,7 @@ Disallow: /config.local.php
 User-agent: GPTBot
 Allow: /about.php
 Allow: /safety.php
-Allow: /r/
+Allow: /resumes/
 Allow: /llms.txt
 Disallow: /admin/
 Disallow: /editor.php
@@ -33,19 +34,19 @@ Disallow: /data/
 User-agent: ChatGPT-User
 Allow: /about.php
 Allow: /safety.php
-Allow: /r/
+Allow: /resumes/
 Allow: /llms.txt
 
 User-agent: Google-Extended
 Allow: /about.php
 Allow: /safety.php
-Allow: /r/
+Allow: /resumes/
 Allow: /llms.txt
 
 User-agent: ClaudeBot
 Allow: /about.php
 Allow: /safety.php
-Allow: /r/
+Allow: /resumes/
 Allow: /llms.txt
 Disallow: /admin/
 Disallow: /data/
@@ -53,13 +54,13 @@ Disallow: /data/
 User-agent: PerplexityBot
 Allow: /about.php
 Allow: /safety.php
-Allow: /r/
+Allow: /resumes/
 Allow: /llms.txt
 
 User-agent: Applebot-Extended
 Allow: /about.php
 Allow: /safety.php
-Allow: /r/
+Allow: /resumes/
 Allow: /llms.txt
 
 Sitemap: https://workisgod.com/sitemap.xml

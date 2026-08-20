@@ -100,7 +100,7 @@ define('GROQ_API_KEY', 'gsk_...');
 Visit:
 
 - `https://workisgod.com/` — home / sign-in
-- `https://workisgod.com/r/demo` — sample themed resume
+- `https://workisgod.com/resumes/demo` — sample themed resume
 
 Then:
 
@@ -109,7 +109,7 @@ Then:
 3. Paste or upload a `.txt` resume.
 4. Optionally check **Use AI agent to improve content**.
 5. Pick a theme and a URL slug.
-6. Save. Share `https://workisgod.com/r/your-slug`.
+6. Save. Share `https://workisgod.com/resumes/your-slug`.
 
 ## 7. If OTP email does not arrive
 
@@ -142,7 +142,7 @@ Admin → Dashboard shows whether the proxy and captcha are detected.
 | --- | --- |
 | Blank page | Select PHP 8.x. Enable `pdo_sqlite`. |
 | `Cannot create data/` | Permissions on `public_html/data` = 755 or 775. |
-| `/r/name` 404 | `.htaccess` is in `public_html`. In **Zone Editor** / hosting, AllowOverride is already on for Namecheap. |
+| `/resumes/name` 404 | `.htaccess` is in `public_html`. In **Zone Editor** / hosting, AllowOverride is already on for Namecheap. |
 | CSS missing | Files must be in `public_html`, not `public_html/workisgod`. |
 | 403 on the site | Restore `.htaccess` from the project. Don’t deny `public_html` itself. |
 | Want HTTPS | Namecheap AutoSSL is usually already on. The app’s `.htaccess` redirects HTTP → HTTPS. |

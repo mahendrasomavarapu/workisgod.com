@@ -20,7 +20,7 @@ function resume_by_slug(string $slug): ?array
 
 function unique_slug(string $desired, ?int $ignoreUserId = null): string
 {
-    $reserved = ['demo', 'admin', 'login', 'logout', 'editor', 'preview', 'share', 'api', 'assets', 'r', 'account', 'about', 'safety'];
+    $reserved = ['demo', 'admin', 'login', 'logout', 'editor', 'preview', 'share', 'api', 'assets', 'r', 'account', 'about', 'safety', 'resumes', 'waiting'];
     $base = slugify($desired);
     if ($base === '' || !is_valid_slug($base) || in_array($base, $reserved, true)) {
         $base = ($base !== '' && !in_array($base, $reserved, true)) ? $base : 'resume-' . bin2hex(random_bytes(3));

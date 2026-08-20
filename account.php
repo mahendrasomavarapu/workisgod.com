@@ -96,7 +96,7 @@ render_header('Account', [
     <?php else: ?>
         <section class="danger-box">
             <h2>Delete public resume</h2>
-            <p>Removes the page at your <code>/r/</code> URL. Your account stays so you can write a new one. This needs an OTP.</p>
+            <p>Removes the page at your <code>/resumes/</code> URL. Your account stays so you can write a new one. This needs an OTP.</p>
             <?php if ($resume): ?>
                 <p>Current URL: <a href="<?= h(public_resume_url($resume['slug'])) ?>"><?= h(public_resume_url($resume['slug'])) ?></a></p>
                 <form method="post">

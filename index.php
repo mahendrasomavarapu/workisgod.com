@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 require __DIR__ . '/includes/init.php';
 
-if (current_user()) {
-    redirect('/editor.php');
+$guest = current_user();
+if ($guest) {
+    redirect(user_status($guest) === 'pending' ? '/waiting.php' : '/editor.php');
 }
 
 if (isset($_GET['deleted'])) {
@@ -45,7 +46,7 @@ render_header(SITE_NAME, ['body' => 'page-home']);
         <li>
             <span>03</span>
             <h2>Share a URL</h2>
-            <p>Your resume lives at a clean link, like <code>/r/your-name</code>.</p>
+            <p>Your resume lives at a clean link, like <code>/resumes/your-name</code>.</p>
         </li>
     </ol>
 
@@ -53,7 +54,7 @@ render_header(SITE_NAME, ['body' => 'page-home']);
         <div class="sample-copy">
             <h2>A theme, not a template maze.</h2>
             <p>Write the way you already write. We turn that text into a readable page. Edit anytime. The URL stays the same.</p>
-            <a class="text-link" href="/r/demo">See a sample resume →</a>
+            <a class="text-link" href="/resumes/demo">See a sample resume →</a>
         </div>
         <div class="sample-frame">
             <?= render_resume_html(parse_resume(sample_resume_text()), 'classic') ?>

@@ -119,7 +119,7 @@ render_header('My resume', ['body' => 'page-editor']);
             <div class="field">
                 <label for="slug">URL slug</label>
                 <div class="slug-row">
-                    <span><?= h(rtrim(SITE_URL, '/') . '/r/') ?></span>
+                    <span><?= h(rtrim(SITE_URL, '/') . '/resumes/') ?></span>
                     <input id="slug" name="slug" required value="<?= h($slug) ?>" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" maxlength="<?= SLUG_MAX ?>">
                 </div>
             </div>

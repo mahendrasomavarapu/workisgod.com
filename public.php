@@ -29,7 +29,7 @@ $isOwner = $owner && $resume && (int) $owner['id'] === (int) $resume['user_id'];
 $person = [
     '@type' => 'Person',
     'name' => $pageTitle,
-    'url' => $isDemo ? rtrim(SITE_URL, '/') . '/r/demo' : public_resume_url((string) $resume['slug']),
+    'url' => $isDemo ? rtrim(SITE_URL, '/') . '/resumes/demo' : public_resume_url((string) $resume['slug']),
 ];
 if (!empty($doc['headline'])) {
     $person['jobTitle'] = $doc['headline'];
@@ -37,7 +37,7 @@ if (!empty($doc['headline'])) {
 render_header($pageTitle, [
     'body' => 'page-public theme-body-' . $theme,
     'description' => $pageTitle . ($doc['headline'] !== '' ? ' — ' . $doc['headline'] : '') . ' · a public resume on Work is God.',
-    'path' => $isDemo ? '/r/demo' : '/r/' . rawurlencode((string) $resume['slug']),
+    'path' => $isDemo ? '/resumes/demo' : '/resumes/' . rawurlencode((string) $resume['slug']),
     'type' => 'ProfilePage',
     'jsonld' => $person,
 ]);

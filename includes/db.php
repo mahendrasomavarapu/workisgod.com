@@ -78,6 +78,13 @@ function migrate(PDO $pdo): void
     if (!in_array('ai_used', $cols, true)) {
         $pdo->exec('ALTER TABLE resumes ADD COLUMN ai_used INTEGER NOT NULL DEFAULT 0');
     }
+    $userCols = [];
+    foreach ($pdo->query('PRAGMA table_info(users)')->fetchAll() as $col) {
+        $userCols[] = (string) $col['name'];
+    }
+    if (!in_array('status', $userCols, true)) {
+        $pdo->exec("ALTER TABLE users ADD COLUMN status TEXT NOT NULL DEFAULT 'active'");
+    }
     $otpCols = [];
     foreach ($pdo->query('PRAGMA table_info(otps)')->fetchAll() as $col) {
         $otpCols[] = (string) $col['name'];

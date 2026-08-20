@@ -19,7 +19,7 @@ render_header('Safety', [
     <h2>Instructions for you</h2>
     <ul>
         <li>Treat the 6-digit email code like a key. Do not forward it. We will never ask for it in chat, SMS, or a second website.</li>
-        <li>Your public URL <code>/r/your-slug</code> is visible to anyone with the link. Do not put national IDs, bank details, home addresses, or unpublished phone numbers in the resume text.</li>
+        <li>Your public URL <code>/resumes/your-slug</code> is visible to anyone with the link. Do not put national IDs, bank details, home addresses, or unpublished phone numbers in the resume text.</li>
         <li>LinkedIn often blocks automated reads. Prefer “Save as PDF” from LinkedIn and upload that file. Do not paste your LinkedIn password anywhere on this site.</li>
         <li>Review AI output before you save. The agent must not invent jobs, dates, or metrics. If it does, delete those lines.</li>
         <li>Change the admin password after first login. Do not reuse that password on other sites.</li>

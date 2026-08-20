@@ -8,10 +8,16 @@ function current_user(): ?array
     if (!$id) {
         return null;
     }
-    $stmt = db()->prepare('SELECT id, email, created_at, last_login_at FROM users WHERE id = ?');
+    $stmt = db()->prepare('SELECT id, email, created_at, last_login_at, status FROM users WHERE id = ?');
     $stmt->execute([(int) $id]);
     $user = $stmt->fetch();
     return $user ?: null;
+}
+
+function user_status(array $user): string
+{
+    $status = (string) ($user['status'] ?? 'active');
+    return in_array($status, ['active', 'pending', 'disabled'], true) ? $status : 'active';
 }
 
 function require_login(): array
@@ -20,6 +26,23 @@ function require_login(): array
     if (!$user) {
         flash_set('error', 'Sign in with your email to continue.');
         redirect('/login.php');
+    }
+    if (!user_logins_enabled()) {
+        logout_user();
+        flash_set('error', 'Guest doors are closed for now.');
+        redirect('/login.php');
+    }
+    $status = user_status($user);
+    if ($status === 'disabled') {
+        logout_user();
+        flash_set('error', 'This seat has been withdrawn.');
+        redirect('/login.php');
+    }
+    if ($status === 'pending') {
+        $script = basename((string) ($_SERVER['SCRIPT_NAME'] ?? ''));
+        if ($script !== 'waiting.php' && $script !== 'logout.php' && $script !== 'account.php') {
+            redirect('/waiting.php');
+        }
     }
     return $user;
 }
@@ -92,7 +115,7 @@ function verify_admin_login(string $email, string $password): string
 function find_or_create_user(string $email): array
 {
     $pdo = db();
-    $stmt = $pdo->prepare('SELECT id, email, created_at, last_login_at FROM users WHERE email = ?');
+    $stmt = $pdo->prepare('SELECT id, email, created_at, last_login_at, status FROM users WHERE email = ?');
     $stmt->execute([$email]);
     $user = $stmt->fetch();
     if ($user) {
@@ -100,9 +123,10 @@ function find_or_create_user(string $email): array
         $user['last_login_at'] = iso_now();
         return $user;
     }
-    $pdo->prepare('INSERT INTO users (email, created_at, last_login_at) VALUES (?, ?, ?)')
-        ->execute([$email, iso_now(), iso_now()]);
-    $stmt = $pdo->prepare('SELECT id, email, created_at, last_login_at FROM users WHERE id = ?');
+    $status = signup_mode() === 'approval' ? 'pending' : 'active';
+    $pdo->prepare('INSERT INTO users (email, created_at, last_login_at, status) VALUES (?, ?, ?, ?)')
+        ->execute([$email, iso_now(), iso_now(), $status]);
+    $stmt = $pdo->prepare('SELECT id, email, created_at, last_login_at, status FROM users WHERE id = ?');
     $stmt->execute([(int) $pdo->lastInsertId()]);
     return $stmt->fetch();
 }
@@ -113,11 +137,19 @@ function send_login_otp(string $email): string
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         return 'Enter a valid email address.';
     }
-    if (setting('signups_open', '1') !== '1') {
-        $stmt = db()->prepare('SELECT id FROM users WHERE email = ?');
-        $stmt->execute([$email]);
-        if (!$stmt->fetch()) {
-            return 'New sign-ins are paused by the administrator.';
+    if (!user_logins_enabled()) {
+        return 'Guest doors are closed for now.';
+    }
+    $stmt = db()->prepare('SELECT id, status FROM users WHERE email = ?');
+    $stmt->execute([$email]);
+    $existing = $stmt->fetch();
+    if ($existing && user_status($existing) === 'disabled') {
+        return 'This seat has been withdrawn.';
+    }
+    if (!$existing) {
+        $mode = signup_mode();
+        if ($mode === 'closed') {
+            return 'New guests are not being received.';
         }
     }
     if (rate_limited('otp-ip:' . client_ip(), 10, 3600)) {
@@ -182,8 +214,15 @@ function verify_login_otp(string $email, string $code): string
 
     $pdo->prepare('DELETE FROM otps WHERE email = ? AND purpose = ?')->execute([$email, 'login']);
     $user = find_or_create_user($email);
+    if (user_status($user) === 'disabled') {
+        return 'This seat has been withdrawn.';
+    }
     login_user($user);
-    flash_set('ok', 'Welcome. Your table is ready.');
+    if (user_status($user) === 'pending') {
+        flash_set('ok', 'Your place is reserved. An administrator will admit you.');
+    } else {
+        flash_set('ok', 'Welcome. Your table is ready.');
+    }
     return '';
 }
 
