@@ -45,7 +45,8 @@ function migrate(PDO $pdo): void
             ip TEXT,
             expires_at INTEGER NOT NULL,
             attempts INTEGER NOT NULL DEFAULT 0,
-            created_at INTEGER NOT NULL
+            created_at INTEGER NOT NULL,
+            purpose TEXT NOT NULL DEFAULT \'login\'
         )'
     );
     $pdo->exec(
@@ -76,6 +77,13 @@ function migrate(PDO $pdo): void
     }
     if (!in_array('ai_used', $cols, true)) {
         $pdo->exec('ALTER TABLE resumes ADD COLUMN ai_used INTEGER NOT NULL DEFAULT 0');
+    }
+    $otpCols = [];
+    foreach ($pdo->query('PRAGMA table_info(otps)')->fetchAll() as $col) {
+        $otpCols[] = (string) $col['name'];
+    }
+    if (!in_array('purpose', $otpCols, true)) {
+        $pdo->exec("ALTER TABLE otps ADD COLUMN purpose TEXT NOT NULL DEFAULT 'login'");
     }
 
     $pdo->exec(

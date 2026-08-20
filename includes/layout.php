@@ -10,6 +10,7 @@ function render_header(string $title, array $opts = []): void
     $canonical = rtrim(SITE_URL, '/') . ($path === '' ? '/' : $path);
     $description = (string) ($opts['description'] ?? 'Write a text resume, optionally improve it with AI, pick a theme, and share a stable public URL on Work is God.');
     $pageType = (string) ($opts['type'] ?? 'WebPage');
+    $robots = (string) ($opts['robots'] ?? (is_private_page() ? 'noindex,nofollow' : 'index,follow,max-image-preview:large'));
     $fullTitle = $title === SITE_NAME ? SITE_NAME : $title . ' · ' . SITE_NAME;
     $jsonLd = [
         '@context' => 'https://schema.org',
@@ -31,6 +32,9 @@ function render_header(string $title, array $opts = []): void
             ],
         ],
     ];
+    if (!empty($opts['jsonld']) && is_array($opts['jsonld'])) {
+        $jsonLd['@graph'][] = $opts['jsonld'];
+    }
     ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -39,7 +43,9 @@ function render_header(string $title, array $opts = []): void
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= h($fullTitle) ?></title>
     <meta name="description" content="<?= h($description) ?>">
-    <meta name="robots" content="index,follow,max-image-preview:large">
+    <meta name="robots" content="<?= h($robots) ?>">
+    <meta name="theme-color" content="#161410">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="canonical" href="<?= h($canonical) ?>">
     <link rel="describedby" href="<?= h(rtrim(SITE_URL, '/') . '/llms.txt') ?>">
     <meta property="og:type" content="website">
@@ -55,13 +61,14 @@ function render_header(string $title, array $opts = []): void
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/assets/css/app.css">
-    <link rel="stylesheet" href="/assets/css/resume.css">
+    <link rel="stylesheet" href="<?= h(asset_url('/assets/css/app.css')) ?>">
+    <link rel="stylesheet" href="<?= h(asset_url('/assets/css/resume.css')) ?>">
     <script>
     try { var t = localStorage.getItem('wig_site_theme'); if (t) document.documentElement.setAttribute('data-site', t); } catch (e) {}
     </script>
 </head>
 <body class="<?= h($bodyClass) ?>">
+<a class="skip" href="#main">Skip to content</a>
 <header class="site-header">
     <a class="wordmark" href="/"><?= h(SITE_NAME) ?></a>
     <nav>
@@ -76,6 +83,7 @@ function render_header(string $title, array $opts = []): void
         <?php if ($user): ?>
             <span class="who"><?= h($user['email']) ?></span>
             <a href="/editor.php">My resume</a>
+            <a href="/account.php">Account</a>
             <a href="/logout.php">Sign out</a>
         <?php else: ?>
             <a href="/login.php">Sign in</a>
@@ -86,7 +94,7 @@ function render_header(string $title, array $opts = []): void
     $flash = flash_get();
     if ($flash):
         ?>
-        <div class="flash flash-<?= h($flash['type']) ?>"><?= h($flash['message']) ?></div>
+        <div class="flash flash-<?= h($flash['type']) ?>" role="status"><?= h($flash['message']) ?></div>
         <?php
     endif;
 }
@@ -95,10 +103,13 @@ function render_footer(): void
 {
     ?>
 <footer class="site-footer">
-    <p><?= h(SITE_NAME) ?> · a quiet page for serious work</p>
+    <p><?= h(SITE_NAME) ?> · your work is received with care</p>
     <p class="fine"><a href="/about.php">About</a> · <a href="/safety.php">Safety</a> · <a href="/llms.txt">llms.txt</a></p>
 </footer>
-<script src="/assets/js/app.js"></script>
+<script src="<?= h(asset_url('/assets/js/app.js')) ?>"></script>
+<?php if (captcha_enabled()): ?>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<?php endif; ?>
 </body>
 </html>
     <?php

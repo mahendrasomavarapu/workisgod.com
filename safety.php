@@ -11,7 +11,7 @@ render_header('Safety', [
     'type' => 'WebPage',
 ]);
 ?>
-<main class="wrap prose">
+<main id="main" class="wrap prose">
     <p class="eyebrow">Safety</p>
     <h1>Use the site safely.</h1>
     <p class="lede">This page is for people publishing a resume and for operators who want to know how the site is defended. Public resumes can be quoted. Secrets never should.</p>
@@ -24,6 +24,7 @@ render_header('Safety', [
         <li>Review AI output before you save. The agent must not invent jobs, dates, or metrics. If it does, delete those lines.</li>
         <li>Change the admin password after first login. Do not reuse that password on other sites.</li>
         <li>Sign out on shared computers.</li>
+        <li>Deleting a resume or the whole account requires a fresh OTP sent to your email. Use Account in the header.</li>
     </ul>
 
     <h2>What is stored</h2>
@@ -35,6 +36,7 @@ render_header('Safety', [
         <li>Sessions use HTTP-only cookies, Secure when HTTPS is on, and SameSite=Lax.</li>
         <li>Forms use CSRF tokens. JSON endpoints require the same token.</li>
         <li>Login, admin login, AI, and profile-import are rate limited by IP and account.</li>
+        <li>Cloudflare Turnstile captcha protects sign-in and delete actions when keys are configured. The site can also sit behind the Cloudflare proxy (see <a href="/CLOUDFLARE.md">CLOUDFLARE.md</a>).</li>
         <li>URL import only allows public http(s) hosts (no localhost or private networks).</li>
         <li>Config files, <code>data/</code>, and <code>includes/</code> are not web-readable. Directory listing is off.</li>
         <li>Security headers: Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, HSTS.</li>

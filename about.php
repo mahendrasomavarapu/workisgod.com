@@ -11,10 +11,10 @@ render_header('About', [
     'type' => 'AboutPage',
 ]);
 ?>
-<main class="wrap prose">
+<main id="main" class="wrap prose">
     <p class="eyebrow">About</p>
-    <h1>Work, written plainly.</h1>
-    <p class="lede">Work is God is a lightweight resume site. You sign in with any email, paste notes or import a profile, pick a theme, and keep a public URL that does not change unless you rename it.</p>
+    <h1>Work, received as it deserves.</h1>
+    <p class="lede">Work is God is a small atelier for your résumé. You are signed in as a guest of honor, not a form. Paste notes or import a profile, choose a theme, and keep a public URL that does not change unless you rename it.</p>
 
     <h2>What you can do</h2>
     <ul>

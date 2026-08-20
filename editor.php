@@ -74,8 +74,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $text = $resume['raw_text'];
             $sourceText = $resume['source_text'] ?? $notes;
             flash_set('ok', $useAi
-                ? 'AI agent rewrote your notes. The themed resume is live.'
-                : 'Saved. Your public URL is ready.');
+                ? 'The draft has been dressed. Your public page is live.'
+                : 'Saved. Your public page is ready for guests.');
             redirect('/editor.php?saved=1');
         } catch (Throwable $e) {
             $error = $e->getMessage();
@@ -89,11 +89,12 @@ $canRestore = $resume && trim((string) ($resume['source_text'] ?? '')) !== ''
 $useAiChecked = $useAi || (!empty($resume['ai_used']) && $_SERVER['REQUEST_METHOD'] !== 'POST');
 render_header('My resume', ['body' => 'page-editor']);
 ?>
-<main class="wrap editor-wrap">
+<main id="main" class="wrap editor-wrap">
     <header class="editor-head">
         <div>
-            <p class="eyebrow">Your resume</p>
-            <h1>Write in text. Publish a page.</h1>
+            <p class="eyebrow">Your rooms</p>
+            <h1>Write in peace. Publish when ready.</h1>
+            <p class="fine">Signed in as <?= h($user['email']) ?> · <a href="/account.php">Delete resume or account</a></p>
         </div>
         <?php if ($share): ?>
             <div class="share-box">

@@ -16,7 +16,7 @@ $rows = db()->query(
 
 render_admin_header('Users', 'users');
 ?>
-<main class="wrap admin-wrap">
+<main id="main" class="wrap admin-wrap">
     <p class="eyebrow">Backoffice</p>
     <h1>Users</h1>
     <table class="admin-table">

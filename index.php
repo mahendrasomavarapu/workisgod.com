@@ -8,21 +8,27 @@ if (current_user()) {
     redirect('/editor.php');
 }
 
+if (isset($_GET['deleted'])) {
+    flash_set('ok', 'Your rooms are closed. You may return whenever you wish.');
+}
+
 render_header(SITE_NAME, ['body' => 'page-home']);
 ?>
-<main class="wrap hero-wrap">
+<main id="main" class="wrap hero-wrap">
     <section class="hero">
-        <p class="eyebrow">Any email. One-time code. No password.</p>
-        <h1>Put your work on a page<br>worth sharing.</h1>
-        <p class="lede">Sign in with Gmail or any other email, paste a text resume, pick a Gen Z or millennial theme, and keep a stable public URL.</p>
+        <p class="eyebrow">A private table. A public page.</p>
+        <h1>Your work is received<br>with full honors.</h1>
+        <p class="lede">Sign in with any email. Paste notes, a URL, or a PDF. We dress the page. You keep a quiet, lasting link.</p>
         <form class="hero-form" method="post" action="/login.php">
             <?= csrf_field() ?>
+            <?= honeypot_field() ?>
             <input type="hidden" name="action" value="send">
             <label class="sr-only" for="email">Email</label>
-            <input id="email" name="email" type="email" required placeholder="you@gmail.com" autocomplete="email">
-            <button type="submit">Send login code</button>
+            <input id="email" name="email" type="email" required maxlength="180" placeholder="you@gmail.com" autocomplete="email">
+            <?= captcha_widget() ?>
+            <button type="submit">Send my private code</button>
         </form>
-        <p class="fine">We’ll email a 6-digit code. Nothing else is stored as a password.</p>
+        <p class="fine">A six-digit code arrives in your inbox. No password is kept. You are never treated as a ticket number.</p>
     </section>
 
     <ol class="steps">

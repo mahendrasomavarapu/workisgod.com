@@ -138,10 +138,10 @@ function send_login_otp(string $email): string
     $code = (string) random_int(100000, 999999);
     $hash = password_hash($code, PASSWORD_DEFAULT);
     $pdo->prepare('DELETE FROM otps WHERE email = ? OR expires_at < ?')->execute([$email, now()]);
-    $pdo->prepare('INSERT INTO otps (email, code_hash, ip, expires_at, attempts, created_at) VALUES (?, ?, ?, ?, 0, ?)')
-        ->execute([$email, $hash, client_ip(), now() + OTP_TTL_SECONDS, now()]);
+    $pdo->prepare('INSERT INTO otps (email, code_hash, ip, expires_at, attempts, created_at, purpose) VALUES (?, ?, ?, ?, 0, ?, ?)')
+        ->execute([$email, $hash, client_ip(), now() + OTP_TTL_SECONDS, now(), 'login']);
 
-    if (!send_otp_email($email, $code)) {
+    if (!send_otp_email($email, $code, 'login')) {
         return 'Could not send email. Check SMTP settings in config.php.';
     }
     return '';
@@ -162,8 +162,8 @@ function verify_login_otp(string $email, string $code): string
     }
 
     $pdo = db();
-    $stmt = $pdo->prepare('SELECT * FROM otps WHERE email = ? ORDER BY id DESC LIMIT 1');
-    $stmt->execute([$email]);
+    $stmt = $pdo->prepare('SELECT * FROM otps WHERE email = ? AND purpose = ? ORDER BY id DESC LIMIT 1');
+    $stmt->execute([$email, 'login']);
     $otp = $stmt->fetch();
     if (!$otp) {
         return 'No login code found. Request a new one.';
@@ -180,8 +180,98 @@ function verify_login_otp(string $email, string $code): string
         return 'That code is incorrect.';
     }
 
-    $pdo->prepare('DELETE FROM otps WHERE email = ?')->execute([$email]);
+    $pdo->prepare('DELETE FROM otps WHERE email = ? AND purpose = ?')->execute([$email, 'login']);
     $user = find_or_create_user($email);
     login_user($user);
+    flash_set('ok', 'Welcome. Your table is ready.');
     return '';
+}
+
+function otp_purposes(): array
+{
+    return ['login', 'delete_resume', 'delete_account'];
+}
+
+function send_action_otp(string $email, string $purpose): string
+{
+    $email = strtolower(trim($email));
+    if (!in_array($purpose, ['delete_resume', 'delete_account'], true)) {
+        return 'Unknown confirmation type.';
+    }
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        return 'Your account email is not valid.';
+    }
+    if (rate_limited('otp-ip:' . client_ip(), 10, 3600) || rate_limited('otp-action:' . $email, 6, 3600)) {
+        return 'Too many codes sent. Try again later.';
+    }
+    $pdo = db();
+    $stmt = $pdo->prepare('SELECT created_at FROM otps WHERE email = ? AND purpose = ? ORDER BY id DESC LIMIT 1');
+    $stmt->execute([$email, $purpose]);
+    $last = $stmt->fetch();
+    if ($last && (now() - (int) $last['created_at']) < OTP_RESEND_SECONDS) {
+        return 'Please wait a minute before requesting another code.';
+    }
+    $code = (string) random_int(100000, 999999);
+    $hash = password_hash($code, PASSWORD_DEFAULT);
+    $pdo->prepare('DELETE FROM otps WHERE email = ? AND purpose = ?')->execute([$email, $purpose]);
+    $pdo->prepare('INSERT INTO otps (email, code_hash, ip, expires_at, attempts, created_at, purpose) VALUES (?, ?, ?, ?, 0, ?, ?)')
+        ->execute([$email, $hash, client_ip(), now() + OTP_TTL_SECONDS, now(), $purpose]);
+    if (!send_otp_email($email, $code, $purpose)) {
+        return 'Could not send the confirmation email.';
+    }
+    return '';
+}
+
+function verify_action_otp(string $email, string $code, string $purpose): string
+{
+    $email = strtolower(trim($email));
+    $code = trim($code);
+    if (!in_array($purpose, ['delete_resume', 'delete_account'], true)) {
+        return 'Unknown confirmation type.';
+    }
+    if (!preg_match('/^\d{6}$/', $code)) {
+        return 'Enter the 6-digit code from your email.';
+    }
+    if (rate_limited('otp-try:' . client_ip(), 20, 3600)) {
+        return 'Too many attempts. Try again later.';
+    }
+    $pdo = db();
+    $stmt = $pdo->prepare('SELECT * FROM otps WHERE email = ? AND purpose = ? ORDER BY id DESC LIMIT 1');
+    $stmt->execute([$email, $purpose]);
+    $otp = $stmt->fetch();
+    if (!$otp) {
+        return 'No confirmation code found. Request a new one.';
+    }
+    if ((int) $otp['expires_at'] < now()) {
+        return 'That code has expired. Request a new one.';
+    }
+    if ((int) $otp['attempts'] >= 5) {
+        return 'Too many incorrect tries. Request a new code.';
+    }
+    $pdo->prepare('UPDATE otps SET attempts = attempts + 1 WHERE id = ?')->execute([$otp['id']]);
+    if (!password_verify($code, $otp['code_hash'])) {
+        return 'That code is incorrect.';
+    }
+    $pdo->prepare('DELETE FROM otps WHERE email = ? AND purpose = ?')->execute([$email, $purpose]);
+    return '';
+}
+
+function delete_user_resume(int $userId): void
+{
+    db()->prepare('DELETE FROM resumes WHERE user_id = ?')->execute([$userId]);
+}
+
+function delete_user_account(int $userId, string $email): void
+{
+    $pdo = db();
+    $pdo->beginTransaction();
+    try {
+        $pdo->prepare('DELETE FROM resumes WHERE user_id = ?')->execute([$userId]);
+        $pdo->prepare('DELETE FROM otps WHERE email = ?')->execute([$email]);
+        $pdo->prepare('DELETE FROM users WHERE id = ?')->execute([$userId]);
+        $pdo->commit();
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        throw $e;
+    }
 }

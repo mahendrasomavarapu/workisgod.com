@@ -31,6 +31,9 @@ if (!defined('RESUME_MAX_CHARS')) define('RESUME_MAX_CHARS', 50000);
 if (!defined('SLUG_MIN')) define('SLUG_MIN', 3);
 if (!defined('SLUG_MAX')) define('SLUG_MAX', 40);
 
+if (!defined('TURNSTILE_SITE_KEY')) define('TURNSTILE_SITE_KEY', '');
+if (!defined('TURNSTILE_SECRET')) define('TURNSTILE_SECRET', '');
+
 if (!defined('ADMIN_BOOTSTRAP_EMAIL')) define('ADMIN_BOOTSTRAP_EMAIL', 'admin@workisgod.com');
 if (!defined('ADMIN_BOOTSTRAP_PASSWORD')) define('ADMIN_BOOTSTRAP_PASSWORD', '');
 

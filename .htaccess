@@ -1,5 +1,7 @@
 DirectoryIndex index.php index.html
 Options -Indexes
+ErrorDocument 404 /404.php
+ErrorDocument 500 /500.php
 
 RewriteEngine On
 RewriteBase /
@@ -28,3 +30,9 @@ RewriteRule (^|/)\. - [F,L]
 <FilesMatch "^(config\.php|config\.local\.php)$">
   Require all denied
 </FilesMatch>
+
+<IfModule mod_headers.c>
+  <FilesMatch "\.(css|js|svg|xml|txt)$">
+    Header set Cache-Control "public, max-age=86400"
+  </FilesMatch>
+</IfModule>

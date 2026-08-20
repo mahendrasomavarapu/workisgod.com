@@ -39,9 +39,41 @@ function csrf_verify(): void
     }
 }
 
+function asset_url(string $path): string
+{
+    $file = dirname(__DIR__) . $path;
+    $v = is_file($file) ? (string) filemtime($file) : '1';
+    return $path . '?v=' . $v;
+}
+
+function is_private_page(): bool
+{
+    $script = (string) ($_SERVER['SCRIPT_NAME'] ?? '');
+    $base = basename($script);
+    if (str_contains($script, '/admin/')) {
+        return true;
+    }
+    return in_array($base, ['editor.php', 'account.php', 'login.php', 'preview.php', 'improve.php', 'capture.php', 'logout.php'], true);
+}
+
+function honeypot_field(): string
+{
+    return '<div class="hp" aria-hidden="true"><label>Leave blank<input type="text" name="website_hp" value="" tabindex="-1" autocomplete="off"></label></div>';
+}
+
+function honeypot_tripped(): bool
+{
+    return trim((string) ($_POST['website_hp'] ?? '')) !== '';
+}
+
 function client_ip(): string
 {
-    return substr((string) ($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0'), 0, 45);
+    $remote = (string) ($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0');
+    $cf = trim((string) ($_SERVER['HTTP_CF_CONNECTING_IP'] ?? ''));
+    if ($cf !== '' && filter_var($cf, FILTER_VALIDATE_IP) && function_exists('ip_in_cidrs') && ip_in_cidrs($remote, cloudflare_ip_ranges())) {
+        return substr($cf, 0, 45);
+    }
+    return substr($remote, 0, 45);
 }
 
 function now(): int

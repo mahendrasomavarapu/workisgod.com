@@ -16,7 +16,7 @@ $rows = db()->query(
 
 render_admin_header('Resumes', 'resumes');
 ?>
-<main class="wrap admin-wrap">
+<main id="main" class="wrap admin-wrap">
     <p class="eyebrow">Backoffice</p>
     <h1>Resumes</h1>
     <table class="admin-table">

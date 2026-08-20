@@ -22,7 +22,7 @@ $recent = $pdo->query(
 
 render_admin_header('Dashboard', 'dashboard');
 ?>
-<main class="wrap admin-wrap">
+<main id="main" class="wrap admin-wrap">
     <p class="eyebrow">Reporting</p>
     <h1>Overview</h1>
     <ul class="admin-stats">
@@ -31,6 +31,13 @@ render_admin_header('Dashboard', 'dashboard');
         <li><strong><?= $aiUsed ?></strong><span>AI drafts</span></li>
         <li><strong><?= $week ?></strong><span>New this week</span></li>
     </ul>
+    <h2>Protection</h2>
+    <ul class="admin-table-lite">
+        <li>Cloudflare proxy: <strong><?= behind_cloudflare() ? 'yes (CF-Ray present)' : 'not detected yet' ?></strong></li>
+        <li>Turnstile captcha: <strong><?= captcha_enabled() ? 'on' : 'off — add TURNSTILE keys in config.local.php' ?></strong></li>
+        <li>Visitor IP used for limits: <code><?= h(client_ip()) ?></code></li>
+    </ul>
+    <p class="hint">Proxy the domain through Cloudflare and add a Turnstile widget. See <code>CLOUDFLARE.md</code>.</p>
     <h2>Recent users</h2>
     <table class="admin-table">
         <thead><tr><th>Email</th><th>Joined</th><th>Last login</th></tr></thead>

@@ -16,9 +16,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_verify();
     $action = (string) ($_POST['action'] ?? 'send');
     if ($action === 'send') {
-        $error = send_login_otp($email);
-        if ($error === '') {
+        if (honeypot_tripped()) {
             $stage = 'otp';
+        } else {
+            $error = captcha_verify();
+            if ($error === '') {
+                $error = send_login_otp($email);
+            }
+            if ($error === '') {
+                $stage = 'otp';
+            }
         }
     } elseif ($action === 'verify') {
         $error = verify_login_otp($email, (string) ($_POST['code'] ?? ''));
@@ -34,18 +41,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 render_header('Sign in', ['body' => 'page-auth']);
 ?>
 <a class="admin-corner" href="/admin/login.php">Admin</a>
-<main class="wrap auth-wrap">
+<main id="main" class="wrap auth-wrap">
     <section class="auth-card">
-        <p class="eyebrow">Sign in</p>
-        <h1><?= $stage === 'otp' ? 'Enter the code' : 'Use your email' ?></h1>
+        <p class="eyebrow">Your table</p>
+        <h1><?= $stage === 'otp' ? 'Your code is waiting' : 'Be received' ?></h1>
         <?php if ($error): ?>
             <p class="form-error"><?= h($error) ?></p>
         <?php endif; ?>
 
         <?php if ($stage === 'otp'): ?>
-            <p class="lede">We sent a 6-digit code to <strong><?= h($email) ?></strong>. Check spam if it isn’t in the inbox.</p>
+            <p class="lede">A private code is on its way to <strong><?= h($email) ?></strong>. Check spam if the room is quiet.</p>
             <form method="post">
                 <?= csrf_field() ?>
+                <?= honeypot_field() ?>
                 <input type="hidden" name="action" value="verify">
                 <input type="hidden" name="email" value="<?= h($email) ?>">
                 <label for="code">One-time code</label>
@@ -56,15 +64,18 @@ render_header('Sign in', ['body' => 'page-auth']);
                 <?= csrf_field() ?>
                 <input type="hidden" name="action" value="send">
                 <input type="hidden" name="email" value="<?= h($email) ?>">
+                <?= captcha_widget() ?>
                 <button type="submit" class="linkish">Send a new code</button>
             </form>
         <?php else: ?>
-            <p class="lede">Gmail or any other address. We’ll send a one-time login code. No password to remember.</p>
+            <p class="lede">Any inbox will do. We send a one-time code. Nothing as crude as a stored password.</p>
             <form method="post">
                 <?= csrf_field() ?>
+                <?= honeypot_field() ?>
                 <input type="hidden" name="action" value="send">
                 <label for="email">Email</label>
                 <input id="email" name="email" type="email" required autofocus autocomplete="email" placeholder="you@gmail.com" value="<?= h($email) ?>">
+                <?= captcha_widget() ?>
                 <button type="submit">Send login code</button>
             </form>
         <?php endif; ?>

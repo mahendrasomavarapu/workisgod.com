@@ -126,7 +126,17 @@ v=spf1 include:spf.web-hosting.com ~all
 
 Namecheap often adds this when email is hosted there. Don’t duplicate conflicting SPF records.
 
-## 8. Common problems
+## 8. Cloudflare and captcha
+
+Follow [CLOUDFLARE.md](CLOUDFLARE.md):
+
+1. Point the domain nameservers to Cloudflare and orange-cloud the A records.
+2. Keep MX records DNS-only so OTP email still hits Namecheap.
+3. Create a Turnstile widget and put `TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET` in `config.local.php`.
+
+Admin → Dashboard shows whether the proxy and captcha are detected.
+
+## 9. Common problems
 
 | Problem | Fix |
 | --- | --- |

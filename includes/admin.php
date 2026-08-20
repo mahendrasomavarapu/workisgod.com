@@ -13,7 +13,9 @@ function render_admin_header(string $title, string $active = 'dashboard'): void
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= h($fullTitle) ?></title>
-    <link rel="stylesheet" href="/assets/css/app.css">
+    <meta name="robots" content="noindex,nofollow">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="<?= h(asset_url('/assets/css/app.css')) ?>">
     <script>
     try { var t = localStorage.getItem('wig_site_theme'); if (t) document.documentElement.setAttribute('data-site', t); } catch (e) {}
     </script>

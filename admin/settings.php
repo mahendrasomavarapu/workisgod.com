@@ -46,7 +46,7 @@ $note = setting('admin_note', '');
 
 render_admin_header('Settings', 'settings');
 ?>
-<main class="wrap admin-wrap">
+<main id="main" class="wrap admin-wrap">
     <p class="eyebrow">Configuration</p>
     <h1>Settings</h1>
     <?php if ($error): ?>
@@ -66,7 +66,8 @@ render_admin_header('Settings', 'settings');
         </label>
         <label for="admin_note">Internal note</label>
         <textarea id="admin_note" name="admin_note" rows="4"><?= h($note) ?></textarea>
-        <p class="hint">SMTP and API keys stay in <code>config.local.php</code> on the server, not in this form.</p>
+        <p class="hint">SMTP, Turnstile, and API keys stay in <code>config.local.php</code>. Cloudflare DNS is set in the Cloudflare dashboard (see <code>CLOUDFLARE.md</code>).</p>
+        <p class="hint">Captcha is <?= captcha_enabled() ? 'enabled' : 'not configured' ?>. Cloudflare proxy is <?= behind_cloudflare() ? 'detected' : 'not detected' ?>.</p>
         <button type="submit">Save settings</button>
     </form>
 

@@ -13,7 +13,14 @@ $email = strtolower(trim((string) ($_POST['email'] ?? '')));
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_verify();
-    $error = verify_admin_login($email, (string) ($_POST['password'] ?? ''));
+    if (honeypot_tripped()) {
+        $error = 'Those admin credentials are not correct.';
+    } else {
+        $error = captcha_verify();
+        if ($error === '') {
+            $error = verify_admin_login($email, (string) ($_POST['password'] ?? ''));
+        }
+    }
     if ($error === '') {
         redirect('/admin/');
     }
@@ -21,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 render_header('Admin sign in', ['body' => 'page-auth']);
 ?>
-<main class="wrap auth-wrap">
+<main id="main" class="wrap auth-wrap">
     <section class="auth-card">
         <p class="eyebrow">Backoffice</p>
         <h1>Admin sign in</h1>
@@ -31,10 +38,12 @@ render_header('Admin sign in', ['body' => 'page-auth']);
         <?php endif; ?>
         <form method="post">
             <?= csrf_field() ?>
+            <?= honeypot_field() ?>
             <label for="email">Admin email</label>
             <input id="email" name="email" type="email" required autofocus autocomplete="username" value="<?= h($email) ?>">
             <label for="password">Password</label>
             <input id="password" name="password" type="password" required autocomplete="current-password">
+            <?= captcha_widget() ?>
             <button type="submit">Sign in to admin</button>
         </form>
         <p class="fine"><a href="/login.php">Back to user sign in</a></p>

@@ -2,19 +2,25 @@
 
 declare(strict_types=1);
 
-function send_otp_email(string $to, string $code): bool
+function send_otp_email(string $to, string $code, string $purpose = 'login'): bool
 {
-    $subject = 'Your ' . SITE_NAME . ' login code';
+    $labels = [
+        'login' => 'login',
+        'delete_resume' => 'resume deletion',
+        'delete_account' => 'account deletion',
+    ];
+    $label = $labels[$purpose] ?? 'confirmation';
+    $subject = 'Your ' . SITE_NAME . ' ' . $label . ' code';
     $safeCode = h($code);
     $minutes = (string) (int) (OTP_TTL_SECONDS / 60);
     $html = '<!DOCTYPE html><html><body style="font-family:Georgia,serif;background:#f7f3ea;padding:24px;color:#1a1a1a;">'
         . '<div style="max-width:480px;margin:0 auto;background:#fff;padding:32px;border:1px solid #e6dcc3;">'
         . '<p style="letter-spacing:.18em;text-transform:uppercase;font-size:12px;color:#8a7a4b;margin:0 0 16px;">' . h(SITE_NAME) . '</p>'
-        . '<p style="margin:0 0 8px;">Your login code is</p>'
+        . '<p style="margin:0 0 8px;">Your private ' . h($label) . ' code</p>'
         . '<p style="font-size:32px;letter-spacing:.28em;margin:0 0 16px;font-weight:bold;">' . $safeCode . '</p>'
-        . '<p style="color:#555;font-size:14px;margin:0;">It expires in ' . $minutes . ' minutes. If you did not request this, you can ignore the email.</p>'
+        . '<p style="color:#555;font-size:14px;margin:0;">It expires in ' . $minutes . ' minutes. Treat it as a key to your rooms. We will never ask you to send this code to anyone.</p>'
         . '</div></body></html>';
-    $text = "Your " . SITE_NAME . " login code is {$code}. It expires in {$minutes} minutes.";
+    $text = "Your " . SITE_NAME . " {$label} code is {$code}. It expires in {$minutes} minutes.";
     return send_mail($to, $subject, $html, $text);
 }
 
