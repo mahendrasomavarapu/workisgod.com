@@ -17,6 +17,7 @@ RewriteRule ^r/([A-Za-z0-9-]+)/?$ /resumes/$1 [L,R=301]
 RewriteRule ^tools/?$ tools.php [L,QSA]
 RewriteRule ^news/(telecom|banking)/?$ news.php?sector=$1 [L,QSA]
 RewriteRule ^news/?$ news.php [L,QSA]
+RewriteRule ^videos/?$ videos.php [L,QSA]
 
 # Block hidden files, but keep /.well-known/ for SSL.
 RewriteCond %{REQUEST_URI} !^/\.well-known/

@@ -51,6 +51,7 @@ render_header(SITE_NAME, ['body' => 'page-home']);
     </ol>
 
     <?php if (news_enabled()) { render_news_promo(); } ?>
+    <?php if (videos_enabled()) { render_videos_promo(); } ?>
 
     <?php render_tools_promo('Twenty ops tools. No install.'); ?>
 

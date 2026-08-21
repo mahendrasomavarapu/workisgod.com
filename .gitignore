@@ -8,4 +8,5 @@ data/*.sqlite-wal
 data/*.sqlite-shm
 data/*.log
 data/news-cache.json
+data/videos-cache.json
 config.local.php

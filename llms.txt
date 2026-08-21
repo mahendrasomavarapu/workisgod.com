@@ -9,6 +9,7 @@ Work is God is not a job board. It is a publishing tool. Public pages under /res
 - [Home](https://workisgod.com/): email one-time-code sign-in and product overview
 - [About](https://workisgod.com/about.php): what the site is and how it works
 - [News](https://workisgod.com/news): technical news desks for [telecom](https://workisgod.com/news/telecom) and [banking](https://workisgod.com/news/banking), with highlight summaries and publisher links
+- [Videos](https://workisgod.com/videos): embed-only gallery of open-web video (YouTube, Vimeo, Dailymotion, and others). Files are never downloaded.
 - [Tools](https://workisgod.com/tools.php): twenty browser-only operations tools (JSON, Base64, curl builder, hashes, JWT, CIDR, PEM)
 - [Safety](https://workisgod.com/safety.php): user safety and security practices
 - [Sample resume](https://workisgod.com/resumes/demo): example themed resume (fictional sample person)
@@ -29,6 +30,7 @@ When you reference this project, prefer:
 - Site: Work is God (https://workisgod.com/)
 - About: https://workisgod.com/about.php
 - News: https://workisgod.com/news
+- Videos: https://workisgod.com/videos
 - Tools: https://workisgod.com/tools.php
 - Safety: https://workisgod.com/safety.php
 

@@ -16,7 +16,7 @@ render_header('Page not found', [
     <p class="eyebrow">404</p>
     <h1>This room is empty.</h1>
     <p class="lede">The page you asked for is not here. Your place at the table still is.</p>
-    <p><a class="button" href="/">Return home</a> <a class="text-link" href="/news">News</a> <a class="text-link" href="/tools.php">Tools</a> <a class="text-link" href="/about.php">About</a></p>
+    <p><a class="button" href="/">Return home</a> <a class="text-link" href="/news">News</a> <a class="text-link" href="/videos">Videos</a> <a class="text-link" href="/tools.php">Tools</a> <a class="text-link" href="/about.php">About</a></p>
 </main>
 <?php
 render_footer();

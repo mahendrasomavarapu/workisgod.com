@@ -59,6 +59,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             flash_set('ok', 'Login codes unlocked for ' . $email . '. They may request a new code now.');
             redirect('/admin/settings.php');
         }
+    } elseif ($action === 'refresh_videos') {
+        admin_save_flags_from_post();
+        if (rate_limited('videos_refresh:' . (string) $admin['id'], 4, 300)) {
+            $error = 'Settings saved. Video links were refreshed too recently — wait a minute.';
+        } else {
+            $report = videos_force_refresh();
+            $failN = count($report['failed'] ?? []);
+            $msg = 'Video links refreshed · ' . (int) ($report['count'] ?? 0) . ' embeds (max 1000) · '
+                . (int) ($report['ok'] ?? 0) . ' sources read';
+            if ($failN) {
+                $msg .= ' · ' . $failN . ' source(s) quiet';
+            }
+            flash_set($failN && (int) ($report['ok'] ?? 0) === 0 ? 'error' : 'ok', $msg);
+            redirect('/admin/settings.php');
+        }
     } elseif ($action === 'refresh_news') {
         admin_save_flags_from_post();
         if (rate_limited('news_refresh:' . (string) $admin['id'], 6, 300)) {
@@ -101,6 +116,9 @@ function admin_save_flags_from_post(): void
     setting_set('otp_ip_max', (string) setting_int_from_post('otp_ip_max', 10, 1, 200));
     setting_set('otp_try_max', (string) setting_int_from_post('otp_try_max', 20, 3, 200));
     setting_set('news_enabled', isset($_POST['news_enabled']) ? '1' : '0');
+    setting_set('videos_enabled', isset($_POST['videos_enabled']) ? '1' : '0');
+    $vsrc = videos_parse_admin_sources((string) ($_POST['video_sources'] ?? ''));
+    setting_set('video_sources', implode("\n", $vsrc));
     foreach (['telecom', 'banking'] as $sector) {
         $raw = (string) ($_POST['news_' . $sector . '_sites'] ?? '');
         $urls = news_parse_site_lines($raw);
@@ -120,8 +138,10 @@ $loginsOn = user_logins_enabled();
 $newAdmins = allow_new_admins();
 $aiOn = setting('ai_enabled', '1') === '1';
 $newsOn = news_enabled();
+$videosOn = videos_enabled();
 $note = setting('admin_note', '');
 $newsReport = news_refresh_report();
+$videoReport = videos_refresh_report();
 $otpBlocks = otp_email_counters();
 
 render_admin_header('Settings', 'settings');
@@ -256,6 +276,39 @@ $failed = $newsReport['failed'] ?? [];
         </section>
 
         <section class="settings-card">
+            <h2>Video door</h2>
+            <label class="switch-row">
+                <span class="switch-copy">
+                    <strong>Show videos</strong>
+                    <small>Homepage and /videos. Embeds only — nothing is downloaded.</small>
+                </span>
+                <span class="switch">
+                    <input class="sr-only" type="checkbox" name="videos_enabled" value="1" <?= $videosOn ? 'checked' : '' ?>>
+                    <span class="switch-ui" aria-hidden="true"></span>
+                </span>
+            </label>
+            <label class="settings-field" for="video_sources">Open platforms to search (one https URL per line)</label>
+            <textarea id="video_sources" name="video_sources" rows="8" inputmode="url"><?= h(videos_source_text()) ?></textarea>
+            <p class="hint">YouTube channel, playlist, or RSS; Vimeo channel RSS; Dailymotion user; or a direct watch URL from YouTube, Vimeo, Dailymotion, Facebook, Instagram, TikTok, Twitch, or archive.org. Max 40 sources. The reel keeps at most 1,000 unique embeds and then loops.</p>
+            <?php
+            $vat = (int) ($videoReport['at'] ?? 0);
+            $vfailed = $videoReport['failed'] ?? [];
+            ?>
+            <p class="settings-status">
+                <?php if ($vat > 0): ?>
+                    Last refresh <?= h(gmdate('j M Y H:i', $vat)) ?> UTC
+                    · <?= (int) ($videoReport['count'] ?? 0) ?> / <?= videos_max() ?> links
+                    · <?= (int) ($videoReport['ok'] ?? 0) ?> sources read
+                    <?php if ($vfailed): ?>
+                        · missed <?= h(implode(', ', array_map(static fn ($u) => (string) parse_url((string) $u, PHP_URL_HOST), $vfailed))) ?>
+                    <?php endif; ?>
+                <?php else: ?>
+                    Video links have not been refreshed yet. Use Refresh videos to fill the door.
+                <?php endif; ?>
+            </p>
+        </section>
+
+        <section class="settings-card">
             <h2>Internal note</h2>
             <label class="sr-only" for="admin_note">Internal note</label>
             <textarea id="admin_note" name="admin_note" rows="4"><?= h($note) ?></textarea>
@@ -264,6 +317,7 @@ $failed = $newsReport['failed'] ?? [];
         <div class="settings-actions">
             <button type="submit" name="action" value="save">Save</button>
             <button type="submit" name="action" value="refresh_news" class="secondary">Refresh news</button>
+            <button type="submit" name="action" value="refresh_videos" class="secondary settings-action-wide">Refresh videos</button>
         </div>
     </form>
 
