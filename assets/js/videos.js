@@ -21,8 +21,8 @@
   const providerEl = document.getElementById("video-provider");
   const modeEl = document.getElementById("video-mode");
   const thumbsEl = document.getElementById("video-thumbs");
-  const swipeEl = document.getElementById("video-swipe");
-  const door = deck.querySelector(".royal-door");
+  const stage = document.getElementById("video-stage");
+  const fullBtn = document.getElementById("video-full");
   const interval = Math.max(6000, parseInt(deck.getAttribute("data-interval") || "12000", 10) || 12000);
   const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -73,6 +73,10 @@
     return (item.platform || "?").charAt(0).toUpperCase();
   }
 
+  function isFull() {
+    return !!(document.fullscreenElement || document.webkitFullscreenElement);
+  }
+
   function paintThumbs() {
     if (!thumbsEl) return;
     thumbsEl.textContent = "";
@@ -119,15 +123,15 @@
     if (countEl) countEl.textContent = (index + 1) + " / " + list.length;
     if (providerEl) providerEl.textContent = provider;
     if (modeEl) modeEl.hidden = !shorts;
-    if (door) door.classList.toggle("is-shorts", shorts);
+    if (stage) stage.classList.toggle("is-shorts", shorts);
     if (rebuildThumbs !== false) paintThumbs();
-    else {
-      const nodes = thumbsEl ? thumbsEl.children : [];
+    else if (thumbsEl) {
+      const nodes = thumbsEl.children;
       for (let n = 0; n < nodes.length; n++) {
         nodes[n].classList.toggle("is-on", n === index);
         nodes[n].setAttribute("aria-selected", n === index ? "true" : "false");
       }
-      const on = thumbsEl && thumbsEl.querySelector(".is-on");
+      const on = thumbsEl.querySelector(".is-on");
       if (on && on.scrollIntoView) {
         on.scrollIntoView({ inline: "center", block: "nearest", behavior: reduce ? "auto" : "smooth" });
       }
@@ -154,9 +158,20 @@
   function arm() {
     window.clearInterval(timer);
     timer = null;
-    if (playing && list.length > 1) {
+    if (playing && list.length > 1 && !isFull()) {
       timer = window.setInterval(next, interval);
     }
+  }
+
+  function toggleFull() {
+    const el = stage || deck;
+    if (isFull()) {
+      const exit = document.exitFullscreen || document.webkitExitFullscreen;
+      if (exit) exit.call(document);
+      return;
+    }
+    const req = el.requestFullscreen || el.webkitRequestFullscreen;
+    if (req) req.call(el);
   }
 
   if (!all.length) return;
@@ -164,66 +179,78 @@
   show(0, true);
   arm();
 
+  if (fullBtn) {
+    fullBtn.addEventListener("click", function () { toggleFull(); });
+  }
+  document.addEventListener("fullscreenchange", function () {
+    if (fullBtn) fullBtn.textContent = isFull() ? "Exit" : "Fullscreen";
+    arm();
+  });
+  document.addEventListener("webkitfullscreenchange", function () {
+    if (fullBtn) fullBtn.textContent = isFull() ? "Exit" : "Fullscreen";
+    arm();
+  });
+
   document.addEventListener("keydown", function (e) {
     if (e.key === "ArrowRight") { next(); arm(); }
     else if (e.key === "ArrowLeft") { prev(); arm(); }
     else if (e.key === "ArrowUp") { cycleProvider(1); arm(); }
     else if (e.key === "ArrowDown") { toggleShorts(); arm(); }
+    else if (e.key === "f" || e.key === "F") { toggleFull(); }
   });
 
-  const surface = swipeEl || deck;
-  let px = 0, py = 0, tracking = false;
-
-  function point(e) {
-    if (e.changedTouches && e.changedTouches[0]) return e.changedTouches[0];
-    if (e.touches && e.touches[0]) return e.touches[0];
-    return e;
-  }
-  function onDown(e) {
-    const t = point(e);
-    px = t.clientX;
-    py = t.clientY;
-    tracking = true;
-  }
-  function onUp(e) {
-    if (!tracking) return;
-    tracking = false;
-    const t = point(e);
-    const dx = t.clientX - px;
-    const dy = t.clientY - py;
-    const ax = Math.abs(dx);
-    const ay = Math.abs(dy);
-    if (ax < 36 && ay < 36) {
-      playing = !playing;
+  function bindRail(el) {
+    if (!el) return;
+    let px = 0, py = 0, tracking = false;
+    function pt(e) {
+      if (e.changedTouches && e.changedTouches[0]) return e.changedTouches[0];
+      if (e.touches && e.touches[0]) return e.touches[0];
+      return e;
+    }
+    function down(e) {
+      const t = pt(e);
+      px = t.clientX;
+      py = t.clientY;
+      tracking = true;
+    }
+    function up(e) {
+      if (!tracking) return;
+      tracking = false;
+      const t = pt(e);
+      const dx = t.clientX - px;
+      const dy = t.clientY - py;
+      const ax = Math.abs(dx);
+      const ay = Math.abs(dy);
+      const rail = el.getAttribute("data-rail");
+      if (ax < 28 && ay < 28) {
+        if (rail === "left") prev();
+        else if (rail === "right") next();
+        arm();
+        return;
+      }
+      if (ax > ay) {
+        if (dx < 0) next();
+        else prev();
+      } else if (rail === "top") {
+        if (dy < 0) cycleProvider(1);
+        else toggleShorts();
+      } else {
+        if (dx < 0) next();
+        else prev();
+      }
       arm();
-      return;
     }
-    if (ax > ay) {
-      if (dx < 0) next();
-      else prev();
+    if (window.PointerEvent) {
+      el.addEventListener("pointerdown", down);
+      el.addEventListener("pointerup", up);
+      el.addEventListener("pointercancel", function () { tracking = false; });
     } else {
-      if (dy < 0) cycleProvider(1);
-      else toggleShorts();
+      el.addEventListener("touchstart", down, { passive: true });
+      el.addEventListener("touchend", up, { passive: true });
     }
-    arm();
   }
 
-  if (window.PointerEvent) {
-    surface.addEventListener("pointerdown", onDown);
-    surface.addEventListener("pointerup", onUp);
-    surface.addEventListener("pointercancel", function () { tracking = false; });
-  } else {
-    surface.addEventListener("touchstart", onDown, { passive: true });
-    surface.addEventListener("touchend", onUp, { passive: true });
-  }
-  surface.addEventListener("touchmove", function (e) {
-    if (!tracking) return;
-    const t = e.touches && e.touches[0];
-    if (!t) return;
-    if (Math.abs(t.clientX - px) > 12 || Math.abs(t.clientY - py) > 12) {
-      if (e.cancelable) e.preventDefault();
-    }
-  }, { passive: false });
+  deck.querySelectorAll(".swipe-rail").forEach(bindRail);
 
   document.addEventListener("visibilitychange", function () {
     if (document.hidden) {

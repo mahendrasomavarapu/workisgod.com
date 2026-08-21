@@ -36,40 +36,35 @@ foreach ($items as $item) {
 
 render_header('Videos', [
     'body' => 'page-videos',
-    'description' => 'Swipe a royal door of open-web video embeds. Left/right next film, up changes provider, down opens shorts. Nothing is downloaded.',
+    'description' => 'Open-web video embeds. Player controls stay clickable. Swipe the edges to change film, provider, or shorts.',
     'path' => '/videos',
     'type' => 'CollectionPage',
 ]);
 ?>
-<main id="main" class="wrap videos-page">
+<main id="main" class="videos-page">
     <script type="application/json" id="video-playlist"><?= str_replace('</', '<\/', (string) json_encode($public, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) ?></script>
     <div id="video-deck" class="video-deck" data-interval="12000">
-        <div class="royal-door" aria-live="polite">
-            <div class="royal-lintel">
+        <div id="video-stage" class="video-stage">
+            <div class="video-glass">
+                <iframe
+                    id="video-frame"
+                    title="Embedded video"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                    allowfullscreen
+                    referrerpolicy="strict-origin-when-cross-origin"
+                    loading="lazy"
+                ></iframe>
+                <div class="swipe-rail swipe-left" data-rail="left" aria-label="Previous"></div>
+                <div class="swipe-rail swipe-right" data-rail="right" aria-label="Next"></div>
+                <div class="swipe-rail swipe-top" data-rail="top" aria-label="Provider or shorts"></div>
+            </div>
+            <div class="video-bar">
                 <span id="video-provider">all</span>
-                <span id="video-mode" class="royal-mode" hidden>shorts</span>
-                <span class="royal-count" id="video-count">0 / 0</span>
+                <span id="video-mode" class="video-mode" hidden>shorts</span>
+                <span id="video-count">0 / 0</span>
+                <button type="button" id="video-full" class="secondary">Fullscreen</button>
             </div>
-            <div class="royal-posts">
-                <span class="royal-post royal-post-l" aria-hidden="true"></span>
-                <div class="royal-well">
-                    <div class="royal-glass">
-                        <iframe
-                            id="video-frame"
-                            title="Embedded video"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-                            allowfullscreen
-                            referrerpolicy="strict-origin-when-cross-origin"
-                            loading="lazy"
-                        ></iframe>
-                        <div id="video-swipe" class="royal-swipe" aria-hidden="true"></div>
-                    </div>
-                </div>
-                <span class="royal-post royal-post-r" aria-hidden="true"></span>
-            </div>
-            <div class="royal-sill">
-                <div id="video-thumbs" class="video-thumbs" role="listbox" aria-label="Videos"></div>
-            </div>
+            <div id="video-thumbs" class="video-thumbs" role="listbox" aria-label="Videos"></div>
         </div>
     </div>
 </main>
