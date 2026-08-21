@@ -160,10 +160,15 @@ function videos_embed_of(string $url, string $title = ''): ?array
         }
         $id = substr($id, 0, 11);
         if (preg_match('/^[A-Za-z0-9_-]{11}$/', $id)) {
+            $short = str_contains($path, '/shorts/');
             $item = [
                 'platform' => 'youtube',
                 'id' => $id,
-                'watch' => 'https://www.youtube.com/watch?v=' . $id,
+                'kind' => $short ? 'short' : 'video',
+                'thumb' => 'https://i.ytimg.com/vi/' . $id . '/mqdefault.jpg',
+                'watch' => $short
+                    ? 'https://www.youtube.com/shorts/' . $id
+                    : 'https://www.youtube.com/watch?v=' . $id,
                 'embed' => 'https://www.youtube-nocookie.com/embed/' . $id,
             ];
         }
@@ -172,6 +177,8 @@ function videos_embed_of(string $url, string $title = ''): ?array
         $item = [
             'platform' => 'vimeo',
             'id' => $id,
+            'kind' => 'video',
+            'thumb' => '',
             'watch' => 'https://vimeo.com/' . $id,
             'embed' => 'https://player.vimeo.com/video/' . $id,
         ];
@@ -180,6 +187,8 @@ function videos_embed_of(string $url, string $title = ''): ?array
         $item = [
             'platform' => 'dailymotion',
             'id' => $id,
+            'kind' => 'video',
+            'thumb' => 'https://www.dailymotion.com/thumbnail/video/' . $id,
             'watch' => 'https://www.dailymotion.com/video/' . $id,
             'embed' => 'https://www.dailymotion.com/embed/video/' . $id,
         ];
@@ -188,6 +197,8 @@ function videos_embed_of(string $url, string $title = ''): ?array
         $item = [
             'platform' => 'facebook',
             'id' => substr(sha1($watch), 0, 12),
+            'kind' => str_contains($path, '/reel/') ? 'short' : 'video',
+            'thumb' => '',
             'watch' => $watch,
             'embed' => 'https://www.facebook.com/plugins/video.php?href=' . rawurlencode($watch) . '&show_text=false',
         ];
@@ -196,6 +207,8 @@ function videos_embed_of(string $url, string $title = ''): ?array
         $item = [
             'platform' => 'instagram',
             'id' => $code,
+            'kind' => $m[1] === 'p' ? 'video' : 'short',
+            'thumb' => '',
             'watch' => 'https://www.instagram.com/' . $m[1] . '/' . $code . '/',
             'embed' => 'https://www.instagram.com/' . $m[1] . '/' . $code . '/embed',
         ];
@@ -204,6 +217,8 @@ function videos_embed_of(string $url, string $title = ''): ?array
         $item = [
             'platform' => 'tiktok',
             'id' => $id,
+            'kind' => 'short',
+            'thumb' => '',
             'watch' => $url,
             'embed' => 'https://www.tiktok.com/embed/v2/' . $id,
         ];
@@ -212,6 +227,8 @@ function videos_embed_of(string $url, string $title = ''): ?array
         $item = [
             'platform' => 'archive',
             'id' => $m[1],
+            'kind' => 'video',
+            'thumb' => '',
             'watch' => 'https://archive.org/details/' . $m[1],
             'embed' => 'https://archive.org/embed/' . $id,
         ];
@@ -221,6 +238,8 @@ function videos_embed_of(string $url, string $title = ''): ?array
         $item = [
             'platform' => 'twitch',
             'id' => $id,
+            'kind' => 'video',
+            'thumb' => '',
             'watch' => 'https://www.twitch.tv/videos/' . $id,
             'embed' => 'https://player.twitch.tv/?video=' . $id . '&parent=' . rawurlencode($parent) . '&autoplay=false',
         ];
@@ -229,6 +248,8 @@ function videos_embed_of(string $url, string $title = ''): ?array
     if (!$item) {
         return null;
     }
+    $item['kind'] = $item['kind'] ?? 'video';
+    $item['thumb'] = $item['thumb'] ?? '';
     $item['title'] = $title !== '' ? $title : ($item['platform'] . ' · ' . $item['id']);
     $item['published'] = 0;
     return $item;
@@ -242,6 +263,8 @@ function videos_bootstrap(): array
         ['https://www.youtube.com/watch?v=zSgiXGELjbc', 'TED: How to spot a liar'],
         ['https://www.youtube.com/watch?v=w7ejDZ8SWv8', 'Traversy: React crash course'],
         ['https://www.youtube.com/watch?v=aircAruvnKk', '3Blue1Brown: Neural networks'],
+        ['https://www.youtube.com/shorts/aircAruvnKk', 'Neural nets short'],
+        ['https://www.youtube.com/shorts/hY7m5jjJ9mM', 'Immune short'],
     ];
     $out = [];
     foreach ($seed as [$url, $title]) {
@@ -445,6 +468,14 @@ function videos_from_html(string $html, string $base): array
             $items = array_merge($items, videos_from_feed($xml));
         }
     }
+    if (preg_match_all('#/shorts/([A-Za-z0-9_-]{11})#', $html, $m)) {
+        foreach (array_unique($m[1]) as $id) {
+            $item = videos_embed_of('https://www.youtube.com/shorts/' . $id);
+            if ($item) {
+                $items[] = $item;
+            }
+        }
+    }
     if (preg_match_all('#(?:https://(?:www\.)?(?:youtube\.com/watch\?v=|youtu\.be/)|/watch\?v=)([A-Za-z0-9_-]{11})#', $html, $m)) {
         foreach (array_unique($m[1]) as $id) {
             $item = videos_embed_of('https://www.youtube.com/watch?v=' . $id);
@@ -492,6 +523,8 @@ function videos_merge_pool(array $fresh, array $old): array
         $out[] = [
             'platform' => (string) ($item['platform'] ?? 'web'),
             'id' => (string) ($item['id'] ?? ''),
+            'kind' => (($item['kind'] ?? '') === 'short') ? 'short' : 'video',
+            'thumb' => (string) ($item['thumb'] ?? ''),
             'title' => (string) ($item['title'] ?? 'Video'),
             'watch' => (string) ($item['watch'] ?? $embed),
             'embed' => $embed,

@@ -57,6 +57,7 @@ header('Referrer-Policy: strict-origin-when-cross-origin');
 header('Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=()');
 $connectSrc = "'self' https://challenges.cloudflare.com";
 $frameSrc = "https://challenges.cloudflare.com";
+$imgSrc = "'self' data:";
 $pageScript = basename((string) ($_SERVER['SCRIPT_NAME'] ?? ''));
 if ($pageScript === 'tools.php') {
     // The curl tool issues CORS fetches from the visitor’s browser only.
@@ -64,8 +65,9 @@ if ($pageScript === 'tools.php') {
 }
 if ($pageScript === 'videos.php') {
     $frameSrc = videos_csp_frame_src();
+    $imgSrc = "'self' data: https://i.ytimg.com https://img.youtube.com https://i.vimeocdn.com https://www.dailymotion.com https://s1.dmcdn.net https://s2.dmcdn.net";
 }
-header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src $connectSrc; frame-src $frameSrc; child-src $frameSrc; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests");
+header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src $imgSrc; connect-src $connectSrc; frame-src $frameSrc; child-src $frameSrc; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests");
 if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
     header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
 }

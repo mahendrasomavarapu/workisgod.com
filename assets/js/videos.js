@@ -4,31 +4,55 @@
   const deck = document.getElementById("video-deck");
   if (!deck) return;
 
-  let list = [];
+  let all = [];
   const raw = document.getElementById("video-playlist");
   try {
-    list = JSON.parse(raw ? raw.textContent : "[]");
+    all = JSON.parse(raw ? raw.textContent : "[]");
   } catch (e) {
-    list = [];
+    all = [];
   }
-  if (!Array.isArray(list)) list = [];
-  list = list.filter(function (item) {
+  if (!Array.isArray(all)) all = [];
+  all = all.filter(function (item) {
     return item && item.embed && String(item.embed).indexOf("https://") === 0;
   }).slice(0, 1000);
 
   const frame = document.getElementById("video-frame");
-  const titleEl = document.getElementById("video-title");
   const countEl = document.getElementById("video-count");
-  const watchEl = document.getElementById("video-watch");
-  const toggle = document.getElementById("video-toggle");
-  const prevBtn = document.getElementById("video-prev");
-  const nextBtn = document.getElementById("video-next");
+  const providerEl = document.getElementById("video-provider");
+  const modeEl = document.getElementById("video-mode");
+  const thumbsEl = document.getElementById("video-thumbs");
+  const swipeEl = document.getElementById("video-swipe");
+  const door = deck.querySelector(".royal-door");
   const interval = Math.max(6000, parseInt(deck.getAttribute("data-interval") || "12000", 10) || 12000);
   const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+  const order = ["all", "youtube", "vimeo", "dailymotion", "facebook", "instagram", "tiktok", "twitch", "archive"];
+  const present = {};
+  all.forEach(function (item) { present[item.platform] = true; });
+  const providers = order.filter(function (p) {
+    return p === "all" || present[p];
+  });
+
+  let provider = "all";
+  let shorts = false;
+  let list = [];
   let index = 0;
   let timer = null;
   let playing = !reduce;
+
+  function activeList() {
+    let items = all;
+    if (provider !== "all") {
+      items = items.filter(function (it) { return it.platform === provider; });
+    }
+    if (shorts) {
+      const clipped = items.filter(function (it) {
+        return it.kind === "short" || it.platform === "tiktok" || it.platform === "instagram";
+      });
+      if (clipped.length) items = clipped;
+    }
+    return items.length ? items : all;
+  }
 
   function embedSrc(item) {
     const url = String(item.embed);
@@ -45,7 +69,46 @@
     return url;
   }
 
-  function show(i) {
+  function letter(item) {
+    return (item.platform || "?").charAt(0).toUpperCase();
+  }
+
+  function paintThumbs() {
+    if (!thumbsEl) return;
+    thumbsEl.textContent = "";
+    list.forEach(function (item, i) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "video-thumb" + (i === index ? " is-on" : "");
+      btn.setAttribute("role", "option");
+      btn.setAttribute("aria-selected", i === index ? "true" : "false");
+      if (item.thumb) {
+        const img = document.createElement("img");
+        img.src = item.thumb;
+        img.alt = "";
+        img.loading = "lazy";
+        img.decoding = "async";
+        btn.appendChild(img);
+      } else {
+        const span = document.createElement("span");
+        span.className = "video-thumb-letter";
+        span.textContent = letter(item);
+        btn.appendChild(span);
+      }
+      btn.addEventListener("click", function () {
+        show(i, true);
+        arm();
+      });
+      thumbsEl.appendChild(btn);
+    });
+    const on = thumbsEl.querySelector(".is-on");
+    if (on && on.scrollIntoView) {
+      on.scrollIntoView({ inline: "center", block: "nearest", behavior: reduce ? "auto" : "smooth" });
+    }
+  }
+
+  function show(i, rebuildThumbs) {
+    list = activeList();
     if (!list.length || !frame) return;
     index = ((i % list.length) + list.length) % list.length;
     const item = list[index];
@@ -53,19 +116,39 @@
     window.setTimeout(function () {
       frame.src = embedSrc(item);
     }, 40);
-    if (titleEl) titleEl.textContent = item.title || (item.platform + " video");
     if (countEl) countEl.textContent = (index + 1) + " / " + list.length;
-    if (watchEl) {
-      watchEl.href = item.watch || item.embed;
-      watchEl.hidden = false;
+    if (providerEl) providerEl.textContent = provider;
+    if (modeEl) modeEl.hidden = !shorts;
+    if (door) door.classList.toggle("is-shorts", shorts);
+    if (rebuildThumbs !== false) paintThumbs();
+    else {
+      const nodes = thumbsEl ? thumbsEl.children : [];
+      for (let n = 0; n < nodes.length; n++) {
+        nodes[n].classList.toggle("is-on", n === index);
+        nodes[n].setAttribute("aria-selected", n === index ? "true" : "false");
+      }
+      const on = thumbsEl && thumbsEl.querySelector(".is-on");
+      if (on && on.scrollIntoView) {
+        on.scrollIntoView({ inline: "center", block: "nearest", behavior: reduce ? "auto" : "smooth" });
+      }
     }
   }
 
-  function next() {
-    show(index + 1);
+  function next() { show(index + 1, false); }
+  function prev() { show(index - 1, false); }
+
+  function cycleProvider(dir) {
+    if (providers.length < 2) return;
+    let i = providers.indexOf(provider);
+    if (i < 0) i = 0;
+    i = (i + dir + providers.length) % providers.length;
+    provider = providers[i];
+    show(0, true);
   }
-  function prev() {
-    show(index - 1);
+
+  function toggleShorts() {
+    shorts = !shorts;
+    show(0, true);
   }
 
   function arm() {
@@ -74,32 +157,74 @@
     if (playing && list.length > 1) {
       timer = window.setInterval(next, interval);
     }
-    if (toggle) toggle.textContent = playing ? "Pause" : "Play";
   }
 
-  if (!list.length) {
-    if (titleEl) titleEl.textContent = "The reel is empty. An administrator can refresh video links.";
-    if (toggle) toggle.disabled = true;
-    return;
-  }
-
-  show(0);
+  if (!all.length) return;
+  list = activeList();
+  show(0, true);
   arm();
 
-  if (nextBtn) nextBtn.addEventListener("click", function () { next(); arm(); });
-  if (prevBtn) prevBtn.addEventListener("click", function () { prev(); arm(); });
-  if (toggle) {
-    toggle.addEventListener("click", function () {
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "ArrowRight") { next(); arm(); }
+    else if (e.key === "ArrowLeft") { prev(); arm(); }
+    else if (e.key === "ArrowUp") { cycleProvider(1); arm(); }
+    else if (e.key === "ArrowDown") { toggleShorts(); arm(); }
+  });
+
+  const surface = swipeEl || deck;
+  let px = 0, py = 0, tracking = false;
+
+  function point(e) {
+    if (e.changedTouches && e.changedTouches[0]) return e.changedTouches[0];
+    if (e.touches && e.touches[0]) return e.touches[0];
+    return e;
+  }
+  function onDown(e) {
+    const t = point(e);
+    px = t.clientX;
+    py = t.clientY;
+    tracking = true;
+  }
+  function onUp(e) {
+    if (!tracking) return;
+    tracking = false;
+    const t = point(e);
+    const dx = t.clientX - px;
+    const dy = t.clientY - py;
+    const ax = Math.abs(dx);
+    const ay = Math.abs(dy);
+    if (ax < 36 && ay < 36) {
       playing = !playing;
       arm();
-    });
+      return;
+    }
+    if (ax > ay) {
+      if (dx < 0) next();
+      else prev();
+    } else {
+      if (dy < 0) cycleProvider(1);
+      else toggleShorts();
+    }
+    arm();
   }
 
-  deck.addEventListener("mouseenter", function () {
-    window.clearInterval(timer);
-    timer = null;
-  });
-  deck.addEventListener("mouseleave", function () { arm(); });
+  if (window.PointerEvent) {
+    surface.addEventListener("pointerdown", onDown);
+    surface.addEventListener("pointerup", onUp);
+    surface.addEventListener("pointercancel", function () { tracking = false; });
+  } else {
+    surface.addEventListener("touchstart", onDown, { passive: true });
+    surface.addEventListener("touchend", onUp, { passive: true });
+  }
+  surface.addEventListener("touchmove", function (e) {
+    if (!tracking) return;
+    const t = e.touches && e.touches[0];
+    if (!t) return;
+    if (Math.abs(t.clientX - px) > 12 || Math.abs(t.clientY - py) > 12) {
+      if (e.cancelable) e.preventDefault();
+    }
+  }, { passive: false });
+
   document.addEventListener("visibilitychange", function () {
     if (document.hidden) {
       window.clearInterval(timer);

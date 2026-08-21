@@ -802,9 +802,10 @@ textarea.ai-flash {
 .videos-promo-copy { max-width: 42rem; }
 .videos-hero { padding: 28px 0 8px; max-width: 42rem; }
 .videos-hero h1 { margin: 0 0 12px; }
-.videos-page { padding-bottom: 56px; }
+.page-videos .videos-page { padding: 8px 0 28px; }
+.page-videos .site-footer { padding-top: 20px; }
 .videos-note { margin-top: 18px; max-width: 46rem; }
-.video-deck { margin: 12px 0 0; }
+.video-deck { margin: 0 auto; max-width: 920px; touch-action: none; }
 .video-controls {
   display: flex;
   flex-wrap: wrap;
@@ -852,6 +853,14 @@ textarea.ai-flash {
   color: var(--gold);
 }
 .royal-count { letter-spacing: .08em; font-family: var(--sans); }
+.royal-mode {
+  letter-spacing: .14em;
+  color: var(--btn-fg);
+  background: var(--gold);
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: .68rem;
+}
 .royal-posts {
   display: grid;
   grid-template-columns: 14px 1fr 14px;
@@ -871,7 +880,13 @@ textarea.ai-flash {
   border: 3px solid var(--gold-2);
   box-shadow: inset 0 0 0 4px var(--gold);
 }
-.royal-glass { aspect-ratio: 16 / 9; background: #0b0906; }
+.royal-glass { aspect-ratio: 16 / 9; background: #0b0906; position: relative; }
+.royal-door.is-shorts .royal-glass {
+  aspect-ratio: 9 / 16;
+  max-height: min(68vh, 640px);
+  max-width: 360px;
+  margin: 0 auto;
+}
 .royal-glass iframe {
   display: block;
   width: 100%;
@@ -879,9 +894,15 @@ textarea.ai-flash {
   border: 0;
   background: #0b0906;
 }
+.royal-swipe {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  touch-action: none;
+}
 .royal-sill {
   border-top: 2px solid var(--gold);
-  padding: 10px 10px 4px;
+  padding: 10px 8px 12px;
   position: relative;
 }
 .royal-sill::after {
@@ -895,6 +916,42 @@ textarea.ai-flash {
   box-shadow: 0 3px 0 var(--ink);
 }
 .royal-title { margin: 0 0 4px; font-family: var(--serif); font-size: 1.15rem; }
+.video-thumbs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  padding: 2px 2px 6px;
+}
+.video-thumb {
+  flex: 0 0 auto;
+  width: 72px;
+  height: 44px;
+  padding: 0;
+  border: 2px solid var(--ink);
+  background: var(--ink);
+  overflow: hidden;
+  box-shadow: none;
+  min-height: 0;
+}
+.video-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.video-thumb-letter {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  color: var(--gold-2);
+  font-family: var(--serif);
+  font-size: 1.1rem;
+}
+.video-thumb.is-on { border-color: var(--gold-2); outline: 2px solid var(--gold); }
+.royal-door.is-shorts .video-thumb { width: 40px; height: 64px; }
 .royal-door-mini {
   text-decoration: none;
   min-height: 180px;
