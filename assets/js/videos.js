@@ -23,6 +23,8 @@
   const thumbsEl = document.getElementById("video-thumbs");
   const stage = document.getElementById("video-stage");
   const fullBtn = document.getElementById("video-full");
+  const soundBtn = document.getElementById("video-sound");
+  const barEl = document.getElementById("video-bar");
   const interval = Math.max(6000, parseInt(deck.getAttribute("data-interval") || "12000", 10) || 12000);
   const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -39,6 +41,7 @@
   let index = 0;
   let timer = null;
   let playing = !reduce;
+  let sound = false;
 
   function activeList() {
     let items = all;
@@ -57,16 +60,50 @@
   function embedSrc(item) {
     const url = String(item.embed);
     const join = url.indexOf("?") >= 0 ? "&" : "?";
+    const origin = encodeURIComponent(window.location.origin);
     if (item.platform === "youtube") {
-      return url + join + "rel=0&modestbranding=1&autoplay=1&mute=1";
+      let q = "rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=" + origin + "&autoplay=1";
+      if (!sound) q += "&mute=1";
+      return url + join + q;
     }
     if (item.platform === "vimeo") {
-      return url + join + "autoplay=1&muted=1&title=0&byline=0";
+      return url + join + "autoplay=1&title=0&byline=0" + (sound ? "" : "&muted=1");
     }
     if (item.platform === "dailymotion") {
-      return url + join + "autoplay=1&mute=1";
+      return url + join + "autoplay=1" + (sound ? "" : "&mute=1");
     }
     return url;
+  }
+
+  function ytCommand(func, args) {
+    try {
+      if (!frame || !frame.contentWindow) return;
+      frame.contentWindow.postMessage(JSON.stringify({
+        event: "command",
+        func: func,
+        args: args || []
+      }), "*");
+    } catch (e) {}
+  }
+
+  function reloadCurrent() {
+    if (!list[index] || !frame) return;
+    frame.src = embedSrc(list[index]);
+  }
+
+  function setSound(on) {
+    sound = !!on;
+    if (soundBtn) soundBtn.textContent = sound ? "Mute" : "Unmute";
+    if (sound) {
+      playing = false;
+      ytCommand("unMute");
+      ytCommand("setVolume", [100]);
+      ytCommand("playVideo");
+    } else {
+      ytCommand("mute");
+    }
+    reloadCurrent();
+    arm();
   }
 
   function letter(item) {
@@ -179,6 +216,9 @@
   show(0, true);
   arm();
 
+  if (soundBtn) {
+    soundBtn.addEventListener("click", function () { setSound(!sound); });
+  }
   if (fullBtn) {
     fullBtn.addEventListener("click", function () { toggleFull(); });
   }
@@ -199,7 +239,7 @@
     else if (e.key === "f" || e.key === "F") { toggleFull(); }
   });
 
-  function bindRail(el) {
+  function bindSwipe(el, mode) {
     if (!el) return;
     let px = 0, py = 0, tracking = false;
     function pt(e) {
@@ -208,6 +248,7 @@
       return e;
     }
     function down(e) {
+      if (e.target && e.target.closest && e.target.closest("button, a")) return;
       const t = pt(e);
       px = t.clientX;
       py = t.clientY;
@@ -221,20 +262,16 @@
       const dy = t.clientY - py;
       const ax = Math.abs(dx);
       const ay = Math.abs(dy);
-      const rail = el.getAttribute("data-rail");
-      if (ax < 28 && ay < 28) {
-        if (rail === "left") prev();
-        else if (rail === "right") next();
-        arm();
-        return;
-      }
-      if (ax > ay) {
-        if (dx < 0) next();
-        else prev();
-      } else if (rail === "top") {
-        if (dy < 0) cycleProvider(1);
-        else toggleShorts();
-      } else {
+      if (ax < 36 && ay < 36) return;
+      if (mode === "bar") {
+        if (ay >= ax) {
+          if (dy < 0) cycleProvider(1);
+          else toggleShorts();
+        } else {
+          if (dx < 0) next();
+          else prev();
+        }
+      } else if (ax >= ay) {
         if (dx < 0) next();
         else prev();
       }
@@ -250,7 +287,8 @@
     }
   }
 
-  deck.querySelectorAll(".swipe-rail").forEach(bindRail);
+  bindSwipe(barEl, "bar");
+  bindSwipe(thumbsEl, "thumbs");
 
   document.addEventListener("visibilitychange", function () {
     if (document.hidden) {

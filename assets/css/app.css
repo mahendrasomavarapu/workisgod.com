@@ -827,30 +827,7 @@ textarea.ai-flash {
   background: #000;
   position: relative;
   z-index: 1;
-}
-.swipe-rail {
-  position: absolute;
-  z-index: 2;
-  background: transparent;
-  border: 0;
-  padding: 0;
-  margin: 0;
-  box-shadow: none;
-  min-height: 0;
-  cursor: pointer;
-}
-.swipe-left, .swipe-right {
-  top: 0;
-  width: 56px;
-  bottom: 84px;
-}
-.swipe-left { left: 0; }
-.swipe-right { right: 0; }
-.swipe-top {
-  top: 0;
-  left: 56px;
-  right: 56px;
-  height: 52px;
+  pointer-events: auto;
 }
 .video-bar {
   display: flex;
@@ -862,12 +839,13 @@ textarea.ai-flash {
   letter-spacing: .08em;
   text-transform: uppercase;
 }
-.video-bar #video-full {
-  margin-left: auto;
-  min-height: 40px;
+.video-bar #video-full,
+.video-bar #video-sound {
+  min-height: 44px;
   padding: 8px 14px;
   font-size: .85rem;
 }
+.video-bar #video-sound { margin-left: auto; }
 .video-mode {
   letter-spacing: .14em;
   color: var(--btn-fg);

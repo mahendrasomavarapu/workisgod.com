@@ -54,14 +54,12 @@ render_header('Videos', [
                     referrerpolicy="strict-origin-when-cross-origin"
                     loading="lazy"
                 ></iframe>
-                <div class="swipe-rail swipe-left" data-rail="left" aria-label="Previous"></div>
-                <div class="swipe-rail swipe-right" data-rail="right" aria-label="Next"></div>
-                <div class="swipe-rail swipe-top" data-rail="top" aria-label="Provider or shorts"></div>
             </div>
-            <div class="video-bar">
+            <div class="video-bar" id="video-bar">
                 <span id="video-provider">all</span>
                 <span id="video-mode" class="video-mode" hidden>shorts</span>
                 <span id="video-count">0 / 0</span>
+                <button type="button" id="video-sound">Unmute</button>
                 <button type="button" id="video-full" class="secondary">Fullscreen</button>
             </div>
             <div id="video-thumbs" class="video-thumbs" role="listbox" aria-label="Videos"></div>
