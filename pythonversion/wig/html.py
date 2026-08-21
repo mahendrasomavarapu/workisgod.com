@@ -108,6 +108,13 @@ def footer(scripts: Optional[list[str]] = None, flash: Optional[dict] = None) ->
 <style>
 .py-banner {{ width:min(1120px,calc(100% - 32px)); margin:8px auto 0; font-size:.78rem; letter-spacing:.12em; text-transform:uppercase; color:var(--gold); }}
 .py-banner a {{ color:inherit; }}
+.hp, .hp label, .hp input {{
+  position:absolute !important; left:-10000px !important; top:auto !important;
+  width:1px !important; height:1px !important; min-width:0 !important; max-width:1px !important;
+  overflow:hidden !important; clip:rect(0,0,0,0) !important; clip-path:inset(50%) !important;
+  opacity:0 !important; pointer-events:none !important; flex:none !important;
+  margin:0 !important; padding:0 !important; border:0 !important;
+}}
 </style>
 </body></html>
 """
@@ -118,7 +125,12 @@ def csrf_field(token: str) -> str:
 
 
 def hp_field() -> str:
-    return '<div class="hp" aria-hidden="true"><label>Leave blank<input type="text" name="website_hp" value="" tabindex="-1" autocomplete="off"></label></div>'
+    return (
+        '<div class="hp" aria-hidden="true">'
+        '<label for="website_hp">Company</label>'
+        '<input id="website_hp" type="text" name="website_hp" value="" tabindex="-1" autocomplete="off">'
+        "</div>"
+    )
 
 
 def parse_resume(text: str) -> dict:

@@ -58,7 +58,7 @@ function is_private_page(): bool
 
 function honeypot_field(): string
 {
-    return '<div class="hp" aria-hidden="true"><label>Leave blank<input type="text" name="website_hp" value="" tabindex="-1" autocomplete="off"></label></div>';
+    return '<div class="hp" aria-hidden="true"><label for="website_hp">Company</label><input id="website_hp" type="text" name="website_hp" value="" tabindex="-1" autocomplete="off"></div>';
 }
 
 function honeypot_tripped(): bool
