@@ -291,7 +291,7 @@ $failed = $newsReport['failed'] ?? [];
             </label>
             <label class="settings-field" for="video_tags">Tags (comedy, sports, cars…)</label>
             <textarea id="video_tags" name="video_tags" rows="6"><?= h(videos_tag_text()) ?></textarea>
-            <p class="hint">One tag per line (or commas). Used to pick entertaining, family-safe clips for teens and middle-aged viewers. Refresh rebuilds the reel from these tags.</p>
+            <p class="hint">One tag per line (or commas). Search is shuffled across YouTube, Vimeo, and Dailymotion — not pinned to a channel. Refresh rebuilds a random mix.</p>
             <label class="settings-field" for="video_sources">Extra platforms (optional, one https URL per line)</label>
             <textarea id="video_sources" name="video_sources" rows="5" inputmode="url"><?= h(videos_source_text()) ?></textarea>
             <p class="hint">Optional channels, playlists, RSS, or a direct watch URL. Max 40. Combined with tags, at most 1,000 unique embeds.</p>

@@ -19,28 +19,7 @@ function videos_enabled(): bool
 
 function videos_default_sources(): string
 {
-    return implode("\n", [
-        'https://www.youtube.com/feeds/videos.xml?channel_id=UCAuUUnT6oDeKwE6v1NGQxug',
-        'https://www.youtube.com/feeds/videos.xml?channel_id=UCLA_DiR1FfKNvjuUpBHmylQ',
-        'https://www.youtube.com/feeds/videos.xml?channel_id=UCsXVk37bltHxD1rDPwtNM8Q',
-        'https://www.youtube.com/feeds/videos.xml?channel_id=UCHnyfMqiRRG1u-2MsSQLbXA',
-        'https://www.youtube.com/feeds/videos.xml?channel_id=UC4a-Gbdw7vOaccHmFo40b9g',
-        'https://www.youtube.com/feeds/videos.xml?channel_id=UC8butISFwT-Wl7EV0hUK0BQ',
-        'https://www.youtube.com/feeds/videos.xml?channel_id=UCYO_jab_esuFRV4b17AKv3w',
-        'https://www.youtube.com/feeds/videos.xml?channel_id=UC7_gcs09iThXybpVgjHZ_7g',
-        'https://www.youtube.com/feeds/videos.xml?channel_id=UC6nSFpj9HTCZ5t-N3RmMg1w',
-        'https://www.youtube.com/feeds/videos.xml?channel_id=UCEIwxahdLz7v8J5PVdoBfng',
-        'https://www.youtube.com/feeds/videos.xml?channel_id=UCvjgXvBlbQiydffZU7m1_aw',
-        'https://www.youtube.com/feeds/videos.xml?channel_id=UC9-y-6csu5WGmIcKI-x9Bhg',
-        'https://www.youtube.com/feeds/videos.xml?channel_id=UC6107grRI4m0o2-emgoDnAA',
-        'https://www.youtube.com/feeds/videos.xml?channel_id=UC6n8I1UDTKP1IWjQMg6_TwA',
-        'https://www.youtube.com/feeds/videos.xml?channel_id=UCV6mNrW8FrmUKtF8HJ9q8gQ',
-        'https://vimeo.com/channels/staffpicks/videos/rss',
-        'https://vimeo.com/channels/documentaryfilm/videos/rss',
-        'https://www.dailymotion.com/rss/user/dailymotion',
-        'https://www.dailymotion.com/rss/user/NASA',
-        'https://www.dailymotion.com/rss/user/tedtalks',
-    ]);
+    return '';
 }
 
 function videos_source_text(): string
@@ -80,28 +59,24 @@ function videos_source_list(): array
 function videos_default_tags(): string
 {
     return implode("\n", [
-        'comedy',
-        'sports highlights',
-        'cars',
-        'wildlife',
-        'live music',
-        'science experiments',
-        'travel',
-        'football',
-        'cricket',
-        'movie trailers',
-        'magic',
-        'street food',
-        'parkour',
-        'gadgets',
-        'funny animals',
+        'funny',
+        'loving',
+        'dance',
+        'music',
+        'trending',
+        'vibing',
+        'enjoy',
     ]);
 }
 
 function videos_tag_text(): string
 {
     $saved = trim(setting('video_tags', ''));
-    return $saved !== '' ? $saved : videos_default_tags();
+    $legacy = "comedy\nsports highlights\ncars\nwildlife\nlive music\nscience experiments\ntravel\nfootball\ncricket\nmovie trailers\nmagic\nstreet food\nparkour\ngadgets\nfunny animals";
+    if ($saved === '' || $saved === $legacy) {
+        return videos_default_tags();
+    }
+    return $saved;
 }
 
 function videos_parse_tags(string $text): array
@@ -128,86 +103,19 @@ function videos_tag_list(): array
     return videos_parse_tags(videos_tag_text());
 }
 
-function videos_tag_channels(): array
-{
-    return [
-        'comedy' => [
-            'https://www.youtube.com/feeds/videos.xml?channel_id=UCRijo3ddMTht_IHyNS7Xb1w',
-            'https://www.youtube.com/feeds/videos.xml?channel_id=UCX6OQ3DkcsbYNE6H8uQQuVA',
-            'https://www.youtube.com/feeds/videos.xml?channel_id=UCvSOibX1lVuOBPxMxOhMFQg',
-        ],
-        'sports highlights' => [
-            'https://www.youtube.com/feeds/videos.xml?channel_id=UCpcTrCXblq78GZrTUTLWeBw',
-            'https://www.youtube.com/feeds/videos.xml?channel_id=UCWJ2lWNubArHWmf3FIHbfLw',
-            'https://www.youtube.com/feeds/videos.xml?channel_id=UCblfuW_4rakIf2hCeqXSnOA',
-        ],
-        'football' => [
-            'https://www.youtube.com/feeds/videos.xml?channel_id=UCpcTrCXblq78GZrTUTLWeBw',
-            'https://www.youtube.com/feeds/videos.xml?channel_id=UCY6om7fue2YJqcGMGb8zpqg',
-        ],
-        'cricket' => [
-            'https://www.youtube.com/feeds/videos.xml?channel_id=UCt2JXOLNxVbI37ByVWFgCKg',
-        ],
-        'cars' => [
-            'https://www.youtube.com/feeds/videos.xml?channel_id=UCj0V0aUblVmg2rA_cRgZkFg',
-            'https://www.youtube.com/feeds/videos.xml?channel_id=UCR-JsqZZfcHz1dW2lKQqYwA',
-        ],
-        'wildlife' => [
-            'https://www.youtube.com/feeds/videos.xml?channel_id=UCwmZiChSryoWQCZMI7EoMOA',
-            'https://www.youtube.com/feeds/videos.xml?channel_id=UCpVm7bg6pXKo1Pr6k5kxG9A',
-        ],
-        'funny animals' => [
-            'https://www.youtube.com/feeds/videos.xml?channel_id=UCwmZiChSryoWQCZMI7EoMOA',
-        ],
-        'science experiments' => [
-            'https://www.youtube.com/feeds/videos.xml?channel_id=UCHnyfMqiRRG1u-2MsSQLbXA',
-            'https://www.youtube.com/feeds/videos.xml?channel_id=UCsXVk37bltHxD1rDPwtNM8Q',
-            'https://www.youtube.com/feeds/videos.xml?channel_id=UCLA_DiR1FfKNvjuUpBHmylQ',
-        ],
-        'gadgets' => [
-            'https://www.youtube.com/feeds/videos.xml?channel_id=UCXGgrKt94gR6lmN4aN3mYTg',
-        ],
-        'parkour' => [
-            'https://www.youtube.com/feeds/videos.xml?channel_id=UCblfuW_4rakIf2hCeqXSnOA',
-        ],
-        'travel' => [
-            'https://www.youtube.com/feeds/videos.xml?channel_id=UCGaOvAFaPCv4PVerW7JlPSg',
-        ],
-        'movie trailers' => [
-            'https://www.youtube.com/feeds/videos.xml?channel_id=UCi8e0iOVk1fEOogdfu4YgfA',
-        ],
-        'magic' => [
-            'https://www.youtube.com/feeds/videos.xml?channel_id=UChUJGhZXK-K0-gZ8khj2Hkw',
-        ],
-        'live music' => [
-            'https://www.youtube.com/feeds/videos.xml?channel_id=UC2pmfLm7iq6Ov1UwYrWYkZA',
-        ],
-        'street food' => [
-            'https://www.youtube.com/feeds/videos.xml?channel_id=UCtinbF-Q-fVthA0qrFQTgXQ',
-        ],
-    ];
-}
-
 function videos_urls_for_tag(string $tag): array
 {
     $q = rawurlencode($tag);
-    $urls = [
-        'https://www.youtube.com/results?search_query=' . $q,
-        'https://www.dailymotion.com/rss/search/' . $q,
-    ];
-    $map = videos_tag_channels();
-    if (!empty($map[$tag])) {
-        foreach ($map[$tag] as $rss) {
-            $urls[] = $rss;
-        }
+    $mods = ['', ' shorts', ' mix', ' 2026', ' official', ' live'];
+    shuffle($mods);
+    $urls = [];
+    foreach (array_slice($mods, 0, 2) as $mod) {
+        $urls[] = 'https://www.youtube.com/results?search_query=' . rawurlencode(trim($tag . $mod));
     }
-    foreach ($map as $key => $rssList) {
-        if ($key !== $tag && str_contains($tag, $key)) {
-            foreach ($rssList as $rss) {
-                $urls[] = $rss;
-            }
-        }
-    }
+    $urls[] = 'https://www.dailymotion.com/rss/search/' . $q;
+    $urls[] = 'https://www.dailymotion.com/search/' . $q . '/videos';
+    $urls[] = 'https://vimeo.com/search?q=' . $q;
+    shuffle($urls);
     return array_values(array_unique($urls));
 }
 
@@ -261,13 +169,18 @@ function videos_write_cache(array $items, int $fetchedAt = 0): void
     }
 }
 
-function videos_items(): array
+function videos_items(bool $shuffle = false): array
 {
     $items = videos_read_cache()['items'] ?? [];
-    if ($items) {
-        return array_slice($items, 0, videos_max());
+    if (!$items) {
+        $items = videos_bootstrap();
     }
-    return array_slice(videos_bootstrap(), 0, videos_max());
+    $items = array_slice($items, 0, videos_max());
+    if ($shuffle && count($items) > 1) {
+        shuffle($items);
+        $items = videos_interleave_platforms($items);
+    }
+    return $items;
 }
 
 function videos_refresh_report(): array
@@ -440,7 +353,7 @@ function videos_keep_item(?array $item): ?array
 function videos_force_refresh(): array
 {
     @set_time_limit(55);
-    $sources = videos_source_list();
+    $sources = [];
     foreach (videos_tag_list() as $tag) {
         foreach (videos_urls_for_tag($tag) as $url) {
             if (!in_array($url, $sources, true)) {
@@ -448,6 +361,16 @@ function videos_force_refresh(): array
             }
         }
     }
+    $hasTags = videos_tag_list() !== [];
+    foreach (videos_source_list() as $extra) {
+        if ($hasTags && str_contains($extra, 'channel_id=')) {
+            continue;
+        }
+        if (!in_array($extra, $sources, true)) {
+            $sources[] = $extra;
+        }
+    }
+    shuffle($sources);
     if (count($sources) > 48) {
         $sources = array_slice($sources, 0, 48);
     }
@@ -552,6 +475,7 @@ function videos_force_refresh(): array
     if (!$merged) {
         $merged = videos_bootstrap();
     }
+    $merged = videos_interleave_platforms($merged);
     videos_write_cache($merged);
     $report = [
         'at' => time(),
@@ -693,8 +617,41 @@ function videos_from_html(string $html, string $base): array
     return $items;
 }
 
+function videos_interleave_platforms(array $items): array
+{
+    if (count($items) < 2) {
+        return $items;
+    }
+    $buckets = [];
+    foreach ($items as $item) {
+        $p = (string) ($item['platform'] ?? 'web');
+        $buckets[$p][] = $item;
+    }
+    foreach ($buckets as &$bucket) {
+        shuffle($bucket);
+    }
+    unset($bucket);
+    $out = [];
+    while ($buckets) {
+        $names = array_keys($buckets);
+        shuffle($names);
+        foreach ($names as $name) {
+            if (empty($buckets[$name])) {
+                unset($buckets[$name]);
+                continue;
+            }
+            $out[] = array_shift($buckets[$name]);
+            if (empty($buckets[$name])) {
+                unset($buckets[$name]);
+            }
+        }
+    }
+    return $out;
+}
+
 function videos_merge_pool(array $fresh, array $old): array
 {
+    shuffle($fresh);
     $seen = [];
     $out = [];
     foreach (array_merge($fresh, $old) as $item) {

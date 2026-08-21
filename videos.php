@@ -18,7 +18,7 @@ if (!videos_enabled()) {
     exit;
 }
 
-$items = videos_items();
+$items = videos_items(true);
 $public = [];
 foreach ($items as $item) {
     $public[] = [
