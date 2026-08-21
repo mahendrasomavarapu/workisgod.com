@@ -4,6 +4,21 @@ declare(strict_types=1);
 
 require __DIR__ . '/includes/init.php';
 
+if (!news_enabled()) {
+    http_response_code(404);
+    render_header('News is closed', [
+        'body' => 'page-404',
+        'path' => '/news',
+        'robots' => 'noindex,nofollow',
+        'description' => 'The technical news desk is not open.',
+    ]);
+    echo '<main id="main" class="wrap prose"><p class="eyebrow">News</p><h1>This desk is closed.</h1>';
+    echo '<p class="lede">The technical news room is not taking visitors just now.</p>';
+    echo '<p><a class="button" href="/">Return home</a></p></main>';
+    render_footer();
+    exit;
+}
+
 $sectors = news_sectors();
 $requested = strtolower(trim((string) ($_GET['sector'] ?? '')));
 $sector = news_normalize_sector($requested);

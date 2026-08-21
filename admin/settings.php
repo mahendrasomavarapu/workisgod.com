@@ -51,20 +51,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
         }
-    } else {
-        $mode = (string) ($_POST['signup_mode'] ?? 'open');
-        if (!in_array($mode, ['open', 'approval', 'closed'], true)) {
-            $mode = 'open';
+    } elseif ($action === 'refresh_news') {
+        admin_save_flags_from_post();
+        if (rate_limited('news_refresh:' . (string) $admin['id'], 6, 300)) {
+            $error = 'Settings saved. News was refreshed too recently — wait a minute and try again.';
+        } else {
+            $report = news_force_refresh();
+            $failN = count($report['failed'] ?? []);
+            $msg = 'News refreshed · ' . (int) ($report['telecom'] ?? 0) . ' telecom · '
+                . (int) ($report['banking'] ?? 0) . ' banking · '
+                . (int) ($report['ok'] ?? 0) . ' sources read';
+            if ($failN) {
+                $msg .= ' · ' . $failN . ' source(s) did not answer';
+            }
+            flash_set($failN && (int) ($report['ok'] ?? 0) === 0 ? 'error' : 'ok', $msg);
+            redirect('/admin/settings.php');
         }
-        setting_set('signup_mode', $mode);
-        setting_set('signups_open', $mode === 'closed' ? '0' : '1');
-        setting_set('user_logins_enabled', isset($_POST['user_logins_enabled']) ? '1' : '0');
-        setting_set('allow_new_admins', isset($_POST['allow_new_admins']) ? '1' : '0');
-        setting_set('ai_enabled', isset($_POST['ai_enabled']) ? '1' : '0');
-        $note = trim((string) ($_POST['admin_note'] ?? ''));
-        setting_set('admin_note', substr($note, 0, 2000));
+    } else {
+        admin_save_flags_from_post();
         flash_set('ok', 'Settings saved.');
         redirect('/admin/settings.php');
+    }
+}
+
+function admin_save_flags_from_post(): void
+{
+    $mode = (string) ($_POST['signup_mode'] ?? 'open');
+    if (!in_array($mode, ['open', 'approval', 'closed'], true)) {
+        $mode = 'open';
+    }
+    setting_set('signup_mode', $mode);
+    setting_set('signups_open', $mode === 'closed' ? '0' : '1');
+    setting_set('user_logins_enabled', isset($_POST['user_logins_enabled']) ? '1' : '0');
+    setting_set('allow_new_admins', isset($_POST['allow_new_admins']) ? '1' : '0');
+    setting_set('ai_enabled', isset($_POST['ai_enabled']) ? '1' : '0');
+    $note = trim((string) ($_POST['admin_note'] ?? ''));
+    setting_set('admin_note', substr($note, 0, 2000));
+    setting_set('news_enabled', isset($_POST['news_enabled']) ? '1' : '0');
+    foreach (['telecom', 'banking'] as $sector) {
+        $raw = (string) ($_POST['news_' . $sector . '_sites'] ?? '');
+        $urls = news_parse_site_lines($raw);
+        setting_set('news_' . $sector . '_sites', implode("\n", $urls));
     }
 }
 
@@ -72,7 +99,9 @@ $mode = signup_mode();
 $loginsOn = user_logins_enabled();
 $newAdmins = allow_new_admins();
 $aiOn = setting('ai_enabled', '1') === '1';
+$newsOn = news_enabled();
 $note = setting('admin_note', '');
+$newsReport = news_refresh_report();
 
 render_admin_header('Settings', 'settings');
 ?>
@@ -85,7 +114,6 @@ render_admin_header('Settings', 'settings');
 
     <form method="post" class="admin-form">
         <?= csrf_field() ?>
-        <input type="hidden" name="action" value="save">
         <p class="import-label">New users</p>
         <label class="check"><input type="radio" name="signup_mode" value="open" <?= $mode === 'open' ? 'checked' : '' ?>> <span>Auto-allow new users (admit immediately)</span></label>
         <label class="check"><input type="radio" name="signup_mode" value="approval" <?= $mode === 'approval' ? 'checked' : '' ?>> <span>Keep new users waiting until an admin approves them</span></label>
@@ -103,10 +131,41 @@ render_admin_header('Settings', 'settings');
             <input type="checkbox" name="ai_enabled" value="1" <?= $aiOn ? 'checked' : '' ?>>
             <span>AI agent enabled for users</span>
         </label>
+        <p class="import-label">Technical news</p>
+        <label class="check">
+            <input type="checkbox" name="news_enabled" value="1" <?= $newsOn ? 'checked' : '' ?>>
+            <span>Show the news desk (homepage, header, /news)</span>
+        </label>
+        <label for="news_telecom_sites">Telecom websites (one https URL per line)</label>
+        <textarea id="news_telecom_sites" name="news_telecom_sites" rows="7"><?= h(news_site_text('telecom')) ?></textarea>
+        <p class="hint">A homepage is enough — we look for its RSS/Atom feed. A direct <code>/feed</code> or <code>/rss.xml</code> URL is more reliable. Max 12.</p>
+        <label for="news_banking_sites">Banking websites (one https URL per line)</label>
+        <textarea id="news_banking_sites" name="news_banking_sites" rows="7"><?= h(news_site_text('banking')) ?></textarea>
+        <p class="hint">Only public https hosts are fetched. Private, localhost, and non-https addresses are ignored.</p>
+        <?php
+        $at = (int) ($newsReport['at'] ?? 0);
+        $failed = $newsReport['failed'] ?? [];
+        ?>
+        <p class="hint">
+            <?php if ($at > 0): ?>
+                Last refresh <?= h(gmdate('j M Y H:i', $at)) ?> UTC
+                · <?= (int) ($newsReport['telecom'] ?? 0) ?> telecom
+                · <?= (int) ($newsReport['banking'] ?? 0) ?> banking
+                · <?= (int) ($newsReport['ok'] ?? 0) ?> sources read
+                <?php if ($failed): ?>
+                    · missed <?= h(implode(', ', array_map(static fn ($u) => news_source_label((string) $u), $failed))) ?>
+                <?php endif; ?>
+            <?php else: ?>
+                News has not been refreshed from these sites yet.
+            <?php endif; ?>
+        </p>
         <label for="admin_note">Internal note</label>
         <textarea id="admin_note" name="admin_note" rows="4"><?= h($note) ?></textarea>
-        <p class="hint">Closing user logins does not lock you out of this admin room.</p>
-        <button type="submit">Save settings</button>
+        <p class="hint">Closing user logins does not lock you out of this admin room. Save websites, then refresh to pull headlines now.</p>
+        <div class="inline-actions">
+            <button type="submit" name="action" value="save">Save settings</button>
+            <button type="submit" name="action" value="refresh_news" class="secondary">Refresh news</button>
+        </div>
     </form>
 
     <?php if ($newAdmins): ?>

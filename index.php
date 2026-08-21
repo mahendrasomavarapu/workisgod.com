@@ -50,7 +50,7 @@ render_header(SITE_NAME, ['body' => 'page-home']);
         </li>
     </ol>
 
-    <?php render_news_promo(); ?>
+    <?php if (news_enabled()) { render_news_promo(); } ?>
 
     <?php render_tools_promo('Twenty ops tools. No install.'); ?>
 

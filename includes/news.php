@@ -26,36 +26,121 @@ function news_sectors(): array
     ];
 }
 
-function news_feeds(): array
+function news_enabled(): bool
 {
-    return [
-        'telecom' => [
-            ['url' => 'https://rcrwireless.com/feed', 'source' => 'RCR Wireless'],
-            ['url' => 'https://www.lightreading.com/rss.xml', 'source' => 'Light Reading'],
-            ['url' => 'https://www.gsma.com/feed/', 'source' => 'GSMA'],
-        ],
-        'banking' => [
-            ['url' => 'https://www.finextra.com/rss/headlines.aspx', 'source' => 'Finextra'],
-            ['url' => 'https://www.finextra.com/rss/channel.aspx?channel=payments', 'source' => 'Finextra Payments'],
-            ['url' => 'https://www.federalreserve.gov/feeds/press_all.xml', 'source' => 'Federal Reserve'],
-        ],
-    ];
+    return setting('news_enabled', '1') === '1';
 }
 
-function news_feed_hosts(): array
+function news_default_site_text(string $sector): string
 {
-    return [
-        'rcrwireless.com',
-        'www.rcrwireless.com',
-        'www.lightreading.com',
-        'lightreading.com',
-        'www.gsma.com',
-        'gsma.com',
-        'www.finextra.com',
-        'finextra.com',
-        'www.federalreserve.gov',
-        'federalreserve.gov',
-    ];
+    if ($sector === 'telecom') {
+        return "https://rcrwireless.com/feed\nhttps://www.lightreading.com/rss.xml\nhttps://www.gsma.com/feed/";
+    }
+    return "https://www.finextra.com/rss/headlines.aspx\nhttps://www.finextra.com/rss/channel.aspx?channel=payments\nhttps://www.federalreserve.gov/feeds/press_all.xml";
+}
+
+function news_site_text(string $sector): string
+{
+    $sector = news_normalize_sector($sector);
+    if ($sector === '') {
+        return '';
+    }
+    $saved = trim(setting('news_' . $sector . '_sites', ''));
+    return $saved !== '' ? $saved : news_default_site_text($sector);
+}
+
+function news_parse_site_lines(string $text): array
+{
+    $urls = [];
+    foreach (preg_split('/\R/u', $text) ?: [] as $line) {
+        $line = trim($line);
+        if ($line === '' || str_starts_with($line, '#')) {
+            continue;
+        }
+        if (!preg_match('#^https?://#i', $line)) {
+            $line = 'https://' . $line;
+        }
+        $url = news_normalize_source_url($line);
+        if ($url === '' || in_array($url, $urls, true)) {
+            continue;
+        }
+        $urls[] = $url;
+        if (count($urls) >= 12) {
+            break;
+        }
+    }
+    return $urls;
+}
+
+function news_normalize_source_url(string $url): string
+{
+    $url = trim($url);
+    $parts = parse_url($url);
+    if (!$parts || empty($parts['host'])) {
+        return '';
+    }
+    $scheme = strtolower((string) ($parts['scheme'] ?? 'https'));
+    if ($scheme !== 'https') {
+        return '';
+    }
+    $host = strtolower((string) $parts['host']);
+    if ($host === '' || isset($parts['user']) || isset($parts['pass'])) {
+        return '';
+    }
+    if (!empty($parts['port']) && (int) $parts['port'] !== 443) {
+        return '';
+    }
+    if (!is_public_hostname($host)) {
+        return '';
+    }
+    $path = $parts['path'] ?? '/';
+    if ($path === '') {
+        $path = '/';
+    }
+    $built = 'https://' . $host . $path;
+    if (!empty($parts['query'])) {
+        $built .= '?' . $parts['query'];
+    }
+    return $built;
+}
+
+function news_source_label(string $url): string
+{
+    $host = strtolower((string) (parse_url($url, PHP_URL_HOST) ?? ''));
+    $host = preg_replace('/^www\./', '', $host) ?? $host;
+    return $host !== '' ? $host : 'source';
+}
+
+function news_feeds(): array
+{
+    $out = ['telecom' => [], 'banking' => []];
+    foreach (['telecom', 'banking'] as $sector) {
+        foreach (news_parse_site_lines(news_site_text($sector)) as $url) {
+            $out[$sector][] = [
+                'url' => $url,
+                'source' => news_source_label($url),
+            ];
+        }
+    }
+    return $out;
+}
+
+function news_refresh_report(): array
+{
+    $raw = setting('news_refresh_report', '');
+    if ($raw === '') {
+        $cache = news_read_cache();
+        $at = is_array($cache) ? (int) ($cache['fetched_at'] ?? 0) : 0;
+        return [
+            'at' => $at,
+            'telecom' => is_array($cache) ? count($cache['sectors']['telecom'] ?? []) : 0,
+            'banking' => is_array($cache) ? count($cache['sectors']['banking'] ?? []) : 0,
+            'ok' => 0,
+            'failed' => [],
+        ];
+    }
+    $data = json_decode($raw, true);
+    return is_array($data) ? $data : ['at' => 0, 'telecom' => 0, 'banking' => 0, 'ok' => 0, 'failed' => []];
 }
 
 function news_editorial(): array
@@ -255,7 +340,14 @@ function news_write_cache(array $sectors): void
     @file_put_contents($path, $payload, LOCK_EX);
 }
 
-function news_refresh_live(array $stale): array
+function news_force_refresh(): array
+{
+    @set_time_limit(50);
+    $live = news_refresh_live([], true);
+    return news_refresh_report();
+}
+
+function news_refresh_live(array $stale, bool $force = false): array
 {
     $jobs = [];
     foreach (news_feeds() as $sector => $feeds) {
@@ -263,27 +355,160 @@ function news_refresh_live(array $stale): array
             $jobs[] = $feed + ['sector' => $sector];
         }
     }
-    $bodies = news_http_multi(array_column($jobs, 'url'));
+    $failed = [];
+    $ok = 0;
     $out = ['telecom' => [], 'banking' => []];
+    $bodies = news_http_multi(array_column($jobs, 'url'));
+    $follow = [];
     foreach ($jobs as $job) {
         $url = $job['url'];
-        $xml = $bodies[$url] ?? '';
-        if ($xml === '') {
+        $body = $bodies[$url] ?? '';
+        if ($body === '') {
+            $failed[] = $url;
             continue;
         }
-        foreach (news_parse_feed($xml, $job['source'], $job['sector']) as $item) {
-            $out[$job['sector']][] = $item;
+        if (news_looks_like_feed($body)) {
+            $parsed = news_parse_feed($body, $job['source'], $job['sector']);
+            if ($parsed) {
+                $ok++;
+                foreach ($parsed as $item) {
+                    $out[$job['sector']][] = $item;
+                }
+            } else {
+                $failed[] = $url;
+            }
+            continue;
+        }
+        $found = news_feeds_from_html($body, $url);
+        if (!$found) {
+            $found = news_guess_feed_urls($url);
+        }
+        $found = array_slice($found, 0, 2);
+        if (!$found) {
+            $failed[] = $url;
+            continue;
+        }
+        foreach ($found as $feedUrl) {
+            $follow[] = [
+                'url' => $feedUrl,
+                'source' => $job['source'],
+                'sector' => $job['sector'],
+                'parent' => $url,
+            ];
+        }
+    }
+    if ($follow) {
+        $more = news_http_multi(array_column($follow, 'url'));
+        $parentOk = [];
+        foreach ($follow as $job) {
+            $xml = $more[$job['url']] ?? '';
+            if ($xml === '' || !news_looks_like_feed($xml)) {
+                continue;
+            }
+            $parsed = news_parse_feed($xml, $job['source'], $job['sector']);
+            if (!$parsed) {
+                continue;
+            }
+            $parentOk[$job['parent']] = true;
+            foreach ($parsed as $item) {
+                $out[$job['sector']][] = $item;
+            }
+        }
+        $ok += count($parentOk);
+        foreach ($follow as $job) {
+            if (empty($parentOk[$job['parent']]) && !in_array($job['parent'], $failed, true)) {
+                $failed[] = $job['parent'];
+            }
         }
     }
     foreach ($out as $sector => $items) {
-        if (!$items && !empty($stale[$sector])) {
+        if (!$force && !$items && !empty($stale[$sector])) {
             $out[$sector] = $stale[$sector];
         } else {
             $out[$sector] = news_dedupe($items);
         }
     }
-    if ($out['telecom'] || $out['banking']) {
-        news_write_cache($out);
+    news_write_cache($out);
+    setting_set('news_refresh_report', (string) json_encode([
+        'at' => time(),
+        'telecom' => count($out['telecom']),
+        'banking' => count($out['banking']),
+        'ok' => $ok,
+        'failed' => array_values(array_unique($failed)),
+    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+    return $out;
+}
+
+function news_looks_like_feed(string $body): bool
+{
+    $head = ltrim(substr($body, 0, 800));
+    return (bool) preg_match('/<(rss|feed|rdf:RDF)\b/i', $head)
+        || (str_contains($body, '<channel') && str_contains($body, '<item'));
+}
+
+function news_absolutize(string $base, string $href): string
+{
+    $href = trim(html_entity_decode($href, ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+    if ($href === '') {
+        return '';
+    }
+    if (preg_match('#^https://#i', $href)) {
+        return news_normalize_source_url($href);
+    }
+    if (str_starts_with($href, '//')) {
+        return news_normalize_source_url('https:' . $href);
+    }
+    $parts = parse_url($base);
+    if (!$parts || empty($parts['host'])) {
+        return '';
+    }
+    $origin = 'https://' . strtolower((string) $parts['host']);
+    if (str_starts_with($href, '/')) {
+        return news_normalize_source_url($origin . $href);
+    }
+    $dir = $parts['path'] ?? '/';
+    $dir = preg_replace('#/[^/]*$#', '/', $dir) ?? '/';
+    return news_normalize_source_url($origin . $dir . $href);
+}
+
+function news_feeds_from_html(string $html, string $base): array
+{
+    $found = [];
+    if (!preg_match_all('#<link\b[^>]*>#i', substr($html, 0, 80_000), $m)) {
+        return [];
+    }
+    foreach ($m[0] as $tag) {
+        if (!preg_match('#type=["\']application/(?:rss|atom)\+xml#i', $tag)) {
+            continue;
+        }
+        if (!preg_match('#href=["\']([^"\']+)#i', $tag, $h)) {
+            continue;
+        }
+        $url = news_absolutize($base, $h[1]);
+        if ($url !== '' && !in_array($url, $found, true)) {
+            $found[] = $url;
+        }
+    }
+    return $found;
+}
+
+function news_guess_feed_urls(string $pageUrl): array
+{
+    $parts = parse_url($pageUrl);
+    if (!$parts || empty($parts['host'])) {
+        return [];
+    }
+    $origin = 'https://' . strtolower((string) $parts['host']);
+    $guesses = ['/feed', '/rss', '/rss.xml', '/atom.xml', '/index.xml', '/feed.xml'];
+    $out = [];
+    foreach ($guesses as $path) {
+        $url = news_normalize_source_url($origin . $path);
+        if ($url !== '') {
+            $out[] = $url;
+        }
+        if (count($out) >= 2) {
+            break;
+        }
     }
     return $out;
 }
@@ -383,7 +608,7 @@ function news_http_multi(array $urls): array
             CURLOPT_CONNECTTIMEOUT => 5,
             CURLOPT_USERAGENT => 'WorkIsGodNews/1.0 (+https://workisgod.com/news)',
             CURLOPT_HTTPHEADER => [
-                'Accept: application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.1',
+                'Accept: application/rss+xml, application/atom+xml, application/xml, text/xml, text/html;q=0.8, */*;q=0.1',
             ],
             CURLOPT_MAXFILESIZE => 800_000,
         ]);
@@ -404,8 +629,9 @@ function news_http_multi(array $urls): array
 
     foreach ($handles as [$ch, $url]) {
         $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $final = (string) curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
         $body = curl_multi_getcontent($ch);
-        if ($code >= 200 && $code < 400 && is_string($body) && $body !== '') {
+        if ($code >= 200 && $code < 400 && is_string($body) && $body !== '' && news_feed_url_ok($final !== '' ? $final : $url)) {
             $out[$url] = strlen($body) > 750_000 ? substr($body, 0, 750_000) : $body;
         }
         curl_multi_remove_handle($mh, $ch);
@@ -417,15 +643,7 @@ function news_http_multi(array $urls): array
 
 function news_feed_url_ok(string $url): bool
 {
-    $parts = parse_url($url);
-    if (!$parts || empty($parts['host']) || strtolower((string) $parts['scheme']) !== 'https') {
-        return false;
-    }
-    $host = strtolower((string) $parts['host']);
-    if (!in_array($host, news_feed_hosts(), true)) {
-        return false;
-    }
-    return function_exists('is_public_hostname') ? is_public_hostname($host) : true;
+    return news_normalize_source_url($url) !== '';
 }
 
 function news_parse_feed(string $xml, string $source, string $sector): array
