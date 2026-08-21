@@ -1017,6 +1017,25 @@ textarea.ai-flash {
 }
 .video-thumb.is-on { border-color: var(--gold-2); outline: 2px solid var(--gold); }
 .video-stage.is-shorts .video-thumb { width: 40px; height: 64px; }
+.video-link-list {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  max-height: 320px;
+  overflow: auto;
+  border: var(--border-w) solid var(--line);
+  border-radius: 12px;
+  background: var(--wash);
+}
+.video-link-list li {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+  font-size: .88rem;
+}
+.video-link-list li span { color: var(--muted); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; }
+.video-link-list a { color: var(--ink); word-break: break-word; }
 .royal-door-mini {
   text-decoration: none;
   min-height: 180px;

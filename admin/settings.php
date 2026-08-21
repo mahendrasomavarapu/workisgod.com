@@ -119,6 +119,8 @@ function admin_save_flags_from_post(): void
     setting_set('videos_enabled', isset($_POST['videos_enabled']) ? '1' : '0');
     $vsrc = videos_parse_admin_sources((string) ($_POST['video_sources'] ?? ''));
     setting_set('video_sources', implode("\n", $vsrc));
+    $vtags = videos_parse_tags((string) ($_POST['video_tags'] ?? ''));
+    setting_set('video_tags', implode("\n", $vtags));
     foreach (['telecom', 'banking'] as $sector) {
         $raw = (string) ($_POST['news_' . $sector . '_sites'] ?? '');
         $urls = news_parse_site_lines($raw);
@@ -287,25 +289,44 @@ $failed = $newsReport['failed'] ?? [];
                     <span class="switch-ui" aria-hidden="true"></span>
                 </span>
             </label>
-            <label class="settings-field" for="video_sources">Open platforms to search (one https URL per line)</label>
-            <textarea id="video_sources" name="video_sources" rows="8" inputmode="url"><?= h(videos_source_text()) ?></textarea>
-            <p class="hint">YouTube channel, playlist, or RSS; Vimeo channel RSS; Dailymotion user; or a direct watch URL from YouTube, Vimeo, Dailymotion, Facebook, Instagram, TikTok, Twitch, or archive.org. Max 40 sources. The reel keeps at most 1,000 unique embeds and then loops.</p>
+            <label class="settings-field" for="video_tags">Tags (comedy, sports, cars…)</label>
+            <textarea id="video_tags" name="video_tags" rows="6"><?= h(videos_tag_text()) ?></textarea>
+            <p class="hint">One tag per line (or commas). Used to pick entertaining, family-safe clips for teens and middle-aged viewers. Refresh rebuilds the reel from these tags.</p>
+            <label class="settings-field" for="video_sources">Extra platforms (optional, one https URL per line)</label>
+            <textarea id="video_sources" name="video_sources" rows="5" inputmode="url"><?= h(videos_source_text()) ?></textarea>
+            <p class="hint">Optional channels, playlists, RSS, or a direct watch URL. Max 40. Combined with tags, at most 1,000 unique embeds.</p>
             <?php
             $vat = (int) ($videoReport['at'] ?? 0);
             $vfailed = $videoReport['failed'] ?? [];
+            $vlist = videos_items();
             ?>
             <p class="settings-status">
                 <?php if ($vat > 0): ?>
                     Last refresh <?= h(gmdate('j M Y H:i', $vat)) ?> UTC
-                    · <?= (int) ($videoReport['count'] ?? 0) ?> / <?= videos_max() ?> links
+                    · <?= count($vlist) ?> / <?= videos_max() ?> links
                     · <?= (int) ($videoReport['ok'] ?? 0) ?> sources read
                     <?php if ($vfailed): ?>
-                        · missed <?= h(implode(', ', array_map(static fn ($u) => (string) parse_url((string) $u, PHP_URL_HOST), $vfailed))) ?>
+                        · missed <?= h(implode(', ', array_map(static fn ($u) => (string) parse_url((string) $u, PHP_URL_HOST), array_slice($vfailed, 0, 6)))) ?>
                     <?php endif; ?>
                 <?php else: ?>
-                    Video links have not been refreshed yet. Use Refresh videos to fill the door.
+                    Not refreshed yet. Save tags, then Refresh videos.
                 <?php endif; ?>
             </p>
+            <?php if ($vlist): ?>
+                <p class="settings-field">Identified links on /videos (<?= count($vlist) ?>)</p>
+                <ol class="video-link-list">
+                    <?php foreach (array_slice($vlist, 0, 120) as $row): ?>
+                        <li>
+                            <span><?= h((string) ($row['platform'] ?? '')) ?>
+                                <?php if (($row['kind'] ?? '') === 'short'): ?> · short<?php endif; ?></span>
+                            <a href="<?= h((string) ($row['watch'] ?? $row['embed'] ?? '#')) ?>" target="_blank" rel="noopener noreferrer"><?= h((string) ($row['title'] ?? $row['watch'] ?? 'video')) ?></a>
+                        </li>
+                    <?php endforeach; ?>
+                </ol>
+                <?php if (count($vlist) > 120): ?>
+                    <p class="hint">Showing 120 of <?= count($vlist) ?>.</p>
+                <?php endif; ?>
+            <?php endif; ?>
         </section>
 
         <section class="settings-card">
