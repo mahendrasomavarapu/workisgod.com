@@ -37,6 +37,8 @@ If you uploaded a zip, right-click it → **Extract**.
 
 The site must live in `public_html` (the web root), not a subfolder, because CSS/JS paths start with `/assets/`.
 
+A Python edition of the same app lives in `public_html/pythonversion/` and is served at `https://workisgod.com/pythonversion/`. It shares `data/app.sqlite` and `/assets`. If that URL 500s, in cPanel open **Setup Python App**, set Application URL to `pythonversion` and startup file to `passenger_wsgi.py`.
+
 ## 2. Set PHP 8 and SQLite
 
 1. In cPanel open **Select PHP Version** (sometimes called **MultiPHP Manager** + **Select PHP Version**).

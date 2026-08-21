@@ -111,7 +111,7 @@ function render_footer(array $opts = []): void
     ?>
 <footer class="site-footer">
     <p><?= h(SITE_NAME) ?> · your work is received with care</p>
-    <p class="fine"><a href="/about.php">About</a><?php if (news_enabled()): ?> · <a href="/news">News</a><?php endif; ?><?php if (videos_enabled()): ?> · <a href="/videos">Videos</a><?php endif; ?> · <a href="/tools.php">Tools</a> · <a href="/safety.php">Safety</a> · <a href="/llms.txt">llms.txt</a></p>
+    <p class="fine"><a href="/about.php">About</a><?php if (news_enabled()): ?> · <a href="/news">News</a><?php endif; ?><?php if (videos_enabled()): ?> · <a href="/videos">Videos</a><?php endif; ?> · <a href="/tools.php">Tools</a> · <a href="/safety.php">Safety</a> · <a href="/pythonversion/">Python</a> · <a href="/llms.txt">llms.txt</a></p>
 </footer>
 <script src="<?= h(asset_url('/assets/js/app.js')) ?>"></script>
 <?php

@@ -7,6 +7,7 @@ Work is God is not a job board. It is a publishing tool. Public pages under /res
 ## Site
 
 - [Home](https://workisgod.com/): email one-time-code sign-in and product overview
+- [Python edition](https://workisgod.com/pythonversion/): the same rooms running as a Python WSGI app under /pythonversion
 - [About](https://workisgod.com/about.php): what the site is and how it works
 - [News](https://workisgod.com/news): technical news desks for [telecom](https://workisgod.com/news/telecom) and [banking](https://workisgod.com/news/banking), with highlight summaries and publisher links
 - [Videos](https://workisgod.com/videos): embed-only gallery of open-web video (YouTube, Vimeo, Dailymotion, and others). Files are never downloaded.

@@ -1,0 +1,24 @@
+Options +ExecCGI -Indexes
+AddHandler cgi-script .cgi
+DirectoryIndex index.php app.cgi
+
+<Files "app.cgi">
+  Options +ExecCGI
+  SetHandler cgi-script
+</Files>
+
+<FilesMatch "\.(py|pyc)$">
+  Require all denied
+</FilesMatch>
+
+<FilesMatch "^(README\.md|requirements\.txt)$">
+  Require all denied
+</FilesMatch>
+
+RewriteEngine On
+RewriteBase /pythonversion/
+
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+
+RewriteRule ^(.*)$ index.php [QSA,L]

@@ -9,4 +9,7 @@ data/*.sqlite-shm
 data/*.log
 data/news-cache.json
 data/videos-cache.json
+pythonversion/__pycache__/
+pythonversion/**/__pycache__/
+pythonversion/*.pyc
 config.local.php

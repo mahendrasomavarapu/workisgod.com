@@ -10,8 +10,9 @@ A small PHP site for [workisgod.com](https://workisgod.com):
 6. Use twenty browser-only ops tools at `/tools.php` (curl, jq, openssl stand-ins)
 7. Read technical news at `/news/telecom` and `/news/banking`
 8. Watch embed-only open-web video at `/videos` (max 1,000 links, infinite slide)
+9. Python edition of the same rooms at [`/pythonversion`](https://workisgod.com/pythonversion/)
 
-No Node, no Composer, no database server. SQLite lives under `data/` (not in git).
+No Node, no Composer, no database server. SQLite lives under `data/` (not in git). The Python edition is stdlib WSGI and shares that SQLite.
 
 ## Docs
 

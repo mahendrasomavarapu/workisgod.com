@@ -1,0 +1,3 @@
+# Optional. The app runs on the Python standard library.
+# Install bcrypt in cPanel Python App if you want PHP admin hashes to verify here.
+# bcrypt>=4.0

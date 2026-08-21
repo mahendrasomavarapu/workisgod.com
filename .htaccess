@@ -6,6 +6,9 @@ ErrorDocument 500 /500.php
 RewriteEngine On
 RewriteBase /
 
+# Python edition lives under /pythonversion (its own .htaccess).
+RewriteRule ^pythonversion(/|$) - [L]
+
 # Force HTTPS when the host already has SSL (Namecheap usually does).
 RewriteCond %{HTTPS} !=on
 RewriteCond %{HTTP:X-Forwarded-Proto} !https
