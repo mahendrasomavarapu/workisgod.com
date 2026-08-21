@@ -51,6 +51,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
         }
+    } elseif ($action === 'unlock_otp') {
+        $email = strtolower(trim((string) ($_POST['unlock_email'] ?? '')));
+        if (!otp_unlock_email($email)) {
+            $error = 'Enter a valid email to unlock.';
+        } else {
+            flash_set('ok', 'Login codes unlocked for ' . $email . '. They may request a new code now.');
+            redirect('/admin/settings.php');
+        }
     } elseif ($action === 'refresh_news') {
         admin_save_flags_from_post();
         if (rate_limited('news_refresh:' . (string) $admin['id'], 6, 300)) {
@@ -87,12 +95,24 @@ function admin_save_flags_from_post(): void
     setting_set('ai_enabled', isset($_POST['ai_enabled']) ? '1' : '0');
     $note = trim((string) ($_POST['admin_note'] ?? ''));
     setting_set('admin_note', substr($note, 0, 2000));
+    setting_set('otp_email_max', (string) setting_int_from_post('otp_email_max', 5, 1, 100));
+    setting_set('otp_window_minutes', (string) setting_int_from_post('otp_window_minutes', 60, 5, 1440));
+    setting_set('otp_resend_seconds', (string) setting_int_from_post('otp_resend_seconds', 60, 0, 600));
+    setting_set('otp_ip_max', (string) setting_int_from_post('otp_ip_max', 10, 1, 200));
+    setting_set('otp_try_max', (string) setting_int_from_post('otp_try_max', 20, 3, 200));
     setting_set('news_enabled', isset($_POST['news_enabled']) ? '1' : '0');
     foreach (['telecom', 'banking'] as $sector) {
         $raw = (string) ($_POST['news_' . $sector . '_sites'] ?? '');
         $urls = news_parse_site_lines($raw);
         setting_set('news_' . $sector . '_sites', implode("\n", $urls));
     }
+}
+
+function setting_int_from_post(string $key, int $default, int $min, int $max): int
+{
+    $raw = trim((string) ($_POST[$key] ?? ''));
+    $value = $raw === '' ? $default : (int) $raw;
+    return max($min, min($max, $value));
 }
 
 $mode = signup_mode();
@@ -102,6 +122,7 @@ $aiOn = setting('ai_enabled', '1') === '1';
 $newsOn = news_enabled();
 $note = setting('admin_note', '');
 $newsReport = news_refresh_report();
+$otpBlocks = otp_email_counters();
 
 render_admin_header('Settings', 'settings');
 $at = (int) ($newsReport['at'] ?? 0);
@@ -174,6 +195,34 @@ $failed = $newsReport['failed'] ?? [];
         </section>
 
         <section class="settings-card">
+            <h2>Login codes</h2>
+            <p class="settings-lead">This is the cap behind “Too many codes sent to this email.” Raising the number lets a locked inbox through on the next try. Unlock clears the counter now.</p>
+            <div class="settings-grid">
+                <div>
+                    <label class="settings-field" for="otp_email_max">Codes per email</label>
+                    <input id="otp_email_max" name="otp_email_max" type="number" inputmode="numeric" min="1" max="100" step="1" value="<?= otp_email_max() ?>">
+                </div>
+                <div>
+                    <label class="settings-field" for="otp_window_minutes">Window (minutes)</label>
+                    <input id="otp_window_minutes" name="otp_window_minutes" type="number" inputmode="numeric" min="5" max="1440" step="5" value="<?= (int) (otp_email_window() / 60) ?>">
+                </div>
+                <div>
+                    <label class="settings-field" for="otp_resend_seconds">Wait between sends (seconds)</label>
+                    <input id="otp_resend_seconds" name="otp_resend_seconds" type="number" inputmode="numeric" min="0" max="600" step="5" value="<?= otp_resend_wait() ?>">
+                </div>
+                <div>
+                    <label class="settings-field" for="otp_ip_max">Codes per network</label>
+                    <input id="otp_ip_max" name="otp_ip_max" type="number" inputmode="numeric" min="1" max="200" step="1" value="<?= otp_ip_max() ?>">
+                </div>
+                <div>
+                    <label class="settings-field" for="otp_try_max">Code guesses per network</label>
+                    <input id="otp_try_max" name="otp_try_max" type="number" inputmode="numeric" min="3" max="200" step="1" value="<?= otp_try_max() ?>">
+                </div>
+            </div>
+            <p class="hint">Default was 5 codes per email per 60 minutes. Set wait to 0 to allow an immediate resend after unlock.</p>
+        </section>
+
+        <section class="settings-card">
             <h2>Technical news</h2>
             <label class="switch-row">
                 <span class="switch-copy">
@@ -216,6 +265,35 @@ $failed = $newsReport['failed'] ?? [];
             <button type="submit" name="action" value="save">Save</button>
             <button type="submit" name="action" value="refresh_news" class="secondary">Refresh news</button>
         </div>
+    </form>
+
+    <form method="post" class="settings-form">
+        <?= csrf_field() ?>
+        <input type="hidden" name="action" value="unlock_otp">
+        <section class="settings-card">
+            <h2>Unlock an inbox</h2>
+            <p class="settings-lead">Clears the code counter and any unused OTP so they can request a fresh code immediately.</p>
+            <label class="settings-field" for="unlock_email">Email</label>
+            <input id="unlock_email" name="unlock_email" type="email" autocomplete="off" placeholder="guest@example.com">
+            <button type="submit">Unlock codes</button>
+            <?php if ($otpBlocks): ?>
+                <ul class="otp-block-list">
+                    <?php foreach ($otpBlocks as $block): ?>
+                        <li>
+                            <span>
+                                <strong><?= h($block['email']) ?></strong>
+                                <small><?= (int) $block['count'] ?> / <?= (int) $block['max'] ?>
+                                    · <?= $block['blocked'] ? 'blocked' : 'counting' ?>
+                                    · <?= (int) ceil($block['left'] / 60) ?> min left</small>
+                            </span>
+                            <button type="submit" name="unlock_email" value="<?= h($block['email']) ?>" class="secondary">Unlock</button>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+            <?php else: ?>
+                <p class="hint">No inboxes are currently in the send window.</p>
+            <?php endif; ?>
+        </section>
     </form>
 
     <?php if ($newAdmins): ?>

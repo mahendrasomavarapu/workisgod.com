@@ -140,6 +140,24 @@ function setting_set(string $key, string $value): void
         ->execute([$key, $value]);
 }
 
+function setting_int(string $key, int $default, int $min = 0, int $max = 1000000): int
+{
+    $raw = setting($key, '');
+    $value = $raw === '' ? $default : (int) $raw;
+    if ($value < $min) {
+        return $min;
+    }
+    if ($value > $max) {
+        return $max;
+    }
+    return $value;
+}
+
+function rate_limit_clear(string $key): void
+{
+    db()->prepare('DELETE FROM rate_limits WHERE key = ?')->execute([$key]);
+}
+
 function rate_limited(string $key, int $max, int $windowSeconds): bool
 {
     $pdo = db();

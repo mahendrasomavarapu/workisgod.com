@@ -11,6 +11,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_verify();
     $id = (int) ($_POST['user_id'] ?? 0);
     $act = (string) ($_POST['user_action'] ?? '');
+    if ($id > 0 && $act === 'unlock_otp') {
+        $row = db()->prepare('SELECT email FROM users WHERE id = ?');
+        $row->execute([$id]);
+        $email = strtolower(trim((string) ($row->fetch()['email'] ?? '')));
+        if (otp_unlock_email($email)) {
+            flash_set('ok', 'Login codes unlocked for ' . $email . '.');
+        } else {
+            flash_set('error', 'Could not unlock that inbox.');
+        }
+        redirect('/admin/users.php');
+    }
     if ($id > 0 && in_array($act, ['approve', 'disable', 'pending'], true)) {
         $status = $act === 'approve' ? 'active' : ($act === 'disable' ? 'disabled' : 'pending');
         db()->prepare('UPDATE users SET status = ? WHERE id = ?')->execute([$status, $id]);
@@ -75,6 +86,7 @@ render_admin_header('Users', 'users');
                         <?php if (($row['status'] ?? '') !== 'disabled'): ?>
                             <button type="submit" name="user_action" value="disable" class="danger">Disable</button>
                         <?php endif; ?>
+                        <button type="submit" name="user_action" value="unlock_otp" class="secondary">Unlock codes</button>
                     </form>
                 </td>
             </tr>

@@ -281,12 +281,34 @@ nav a.is-on { font-weight: 700; text-decoration: underline; }
 }
 .settings-form input[type="email"],
 .settings-form input[type="password"],
+.settings-form input[type="number"],
 .settings-form textarea {
   width: 100%;
   min-height: 48px;
   border-radius: 12px;
   font-size: 16px;
 }
+.settings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.otp-block-list {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+}
+.otp-block-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+}
+.otp-block-list li span { display: grid; gap: 2px; min-width: 0; }
+.otp-block-list small { color: var(--muted); }
+.otp-block-list button { width: auto; margin: 0; min-height: 40px; padding: 8px 12px; }
 .settings-form textarea { min-height: 132px; line-height: 1.45; }
 .settings-card button { width: 100%; margin-top: 14px; min-height: 48px; border-radius: 14px; }
 
@@ -411,6 +433,8 @@ nav a.is-on { font-weight: 700; text-decoration: underline; }
   .seg { gap: 6px; }
   .seg-btn span { min-height: 72px; font-size: .92rem; }
   .admin-table { display: block; overflow-x: auto; }
+  .settings-grid { grid-template-columns: 1fr; }
+  .otp-block-list li { flex-direction: column; align-items: stretch; }
 }
 @media (max-width: 420px) {
   .seg { grid-template-columns: 1fr; }

@@ -131,6 +131,69 @@ function find_or_create_user(string $email): array
     return $stmt->fetch();
 }
 
+function otp_email_max(): int
+{
+    return setting_int('otp_email_max', 5, 1, 100);
+}
+
+function otp_email_window(): int
+{
+    return setting_int('otp_window_minutes', 60, 5, 1440) * 60;
+}
+
+function otp_ip_max(): int
+{
+    return setting_int('otp_ip_max', 10, 1, 200);
+}
+
+function otp_resend_wait(): int
+{
+    $fallback = defined('OTP_RESEND_SECONDS') ? OTP_RESEND_SECONDS : 60;
+    return setting_int('otp_resend_seconds', $fallback, 0, 600);
+}
+
+function otp_try_max(): int
+{
+    return setting_int('otp_try_max', 20, 3, 200);
+}
+
+function otp_unlock_email(string $email): bool
+{
+    $email = strtolower(trim($email));
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        return false;
+    }
+    rate_limit_clear('otp-email:' . $email);
+    rate_limit_clear('otp-action:' . $email);
+    db()->prepare('DELETE FROM otps WHERE email = ?')->execute([$email]);
+    return true;
+}
+
+function otp_email_counters(): array
+{
+    $window = otp_email_window();
+    $max = otp_email_max();
+    $now = now();
+    $rows = db()->query("SELECT key, count, window_start FROM rate_limits WHERE key LIKE 'otp-email:%' ORDER BY count DESC, window_start DESC")->fetchAll();
+    $out = [];
+    foreach ($rows as $row) {
+        $start = (int) $row['window_start'];
+        $elapsed = $now - $start;
+        if ($elapsed >= $window) {
+            continue;
+        }
+        $count = (int) $row['count'];
+        $out[] = [
+            'email' => substr((string) $row['key'], strlen('otp-email:')),
+            'count' => $count,
+            'max' => $max,
+            'left' => max(0, $window - $elapsed),
+            'blocked' => $count >= $max,
+        ];
+    }
+    return $out;
+}
+
 function send_login_otp(string $email): string
 {
     $email = strtolower(trim($email));
@@ -152,19 +215,23 @@ function send_login_otp(string $email): string
             return 'New guests are not being received.';
         }
     }
-    if (rate_limited('otp-ip:' . client_ip(), 10, 3600)) {
+    if (rate_limited('otp-ip:' . client_ip(), otp_ip_max(), otp_email_window())) {
         return 'Too many login attempts from this network. Try again later.';
     }
-    if (rate_limited('otp-email:' . $email, 5, 3600)) {
+    if (rate_limited('otp-email:' . $email, otp_email_max(), otp_email_window())) {
         return 'Too many codes sent to this email. Try again later.';
     }
 
     $pdo = db();
+    $wait = otp_resend_wait();
     $stmt = $pdo->prepare('SELECT created_at FROM otps WHERE email = ? ORDER BY id DESC LIMIT 1');
     $stmt->execute([$email]);
     $last = $stmt->fetch();
-    if ($last && (now() - (int) $last['created_at']) < OTP_RESEND_SECONDS) {
-        return 'Please wait a minute before requesting another code.';
+    if ($wait > 0 && $last && (now() - (int) $last['created_at']) < $wait) {
+        $secs = $wait - (now() - (int) $last['created_at']);
+        return $secs <= 90
+            ? 'Please wait ' . max(1, $secs) . ' seconds before requesting another code.'
+            : 'Please wait a minute before requesting another code.';
     }
 
     $code = (string) random_int(100000, 999999);
@@ -189,7 +256,7 @@ function verify_login_otp(string $email, string $code): string
     if (!preg_match('/^\d{6}$/', $code)) {
         return 'Enter the 6-digit code from your email.';
     }
-    if (rate_limited('otp-try:' . client_ip(), 20, 3600)) {
+    if (rate_limited('otp-try:' . client_ip(), otp_try_max(), otp_email_window())) {
         return 'Too many attempts. Try again later.';
     }
 
@@ -240,15 +307,16 @@ function send_action_otp(string $email, string $purpose): string
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         return 'Your account email is not valid.';
     }
-    if (rate_limited('otp-ip:' . client_ip(), 10, 3600) || rate_limited('otp-action:' . $email, 6, 3600)) {
+    if (rate_limited('otp-ip:' . client_ip(), otp_ip_max(), otp_email_window()) || rate_limited('otp-action:' . $email, otp_email_max(), otp_email_window())) {
         return 'Too many codes sent. Try again later.';
     }
     $pdo = db();
+    $wait = otp_resend_wait();
     $stmt = $pdo->prepare('SELECT created_at FROM otps WHERE email = ? AND purpose = ? ORDER BY id DESC LIMIT 1');
     $stmt->execute([$email, $purpose]);
     $last = $stmt->fetch();
-    if ($last && (now() - (int) $last['created_at']) < OTP_RESEND_SECONDS) {
-        return 'Please wait a minute before requesting another code.';
+    if ($wait > 0 && $last && (now() - (int) $last['created_at']) < $wait) {
+        return 'Please wait before requesting another code.';
     }
     $code = (string) random_int(100000, 999999);
     $hash = password_hash($code, PASSWORD_DEFAULT);
@@ -271,7 +339,7 @@ function verify_action_otp(string $email, string $code, string $purpose): string
     if (!preg_match('/^\d{6}$/', $code)) {
         return 'Enter the 6-digit code from your email.';
     }
-    if (rate_limited('otp-try:' . client_ip(), 20, 3600)) {
+    if (rate_limited('otp-try:' . client_ip(), otp_try_max(), otp_email_window())) {
         return 'Too many attempts. Try again later.';
     }
     $pdo = db();
