@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import random
 import smtplib
 import ssl
@@ -144,22 +145,99 @@ def send_mail(to: str, code: str) -> bool:
         f'<p style="font-size:32px;letter-spacing:.2em"><b>{code}</b></p>'
         f"<p>It expires in {config.OTP_TTL // 60} minutes.</p>"
     )
-    if not config.SMTP_HOST or not config.SMTP_PASS:
-        return False
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
     msg["From"] = f"{config.MAIL_FROM_NAME} <{config.MAIL_FROM}>"
     msg["To"] = to
     msg.attach(MIMEText(text, "plain", "utf-8"))
     msg.attach(MIMEText(html, "html", "utf-8"))
-    try:
-        ctx = ssl.create_default_context()
-        with smtplib.SMTP_SSL(config.SMTP_HOST, config.SMTP_PORT, timeout=20, context=ctx) as smtp:
-            smtp.login(config.SMTP_USER, config.SMTP_PASS)
-            smtp.sendmail(config.MAIL_FROM, [to], msg.as_string())
+    raw = msg.as_string()
+    errors = []
+    if config.SMTP_HOST and config.SMTP_PASS:
+        if _smtp_send(raw, to, errors):
+            return True
+    if _sendmail(raw, errors):
         return True
-    except Exception:
+    import sys
+
+    sys.stderr.write("[pythonversion] mail failed: " + " | ".join(errors) + "\n")
+    return False
+
+
+def _ssl_ctx(check_hostname: bool):
+    ctx = ssl.create_default_context()
+    if not check_hostname:
+        # Namecheap presents the server hostname cert, not mail.domain.com.
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+    return ctx
+
+
+def _smtp_send(raw: str, to: str, errors) -> bool:
+    host = config.SMTP_HOST
+    port = int(config.SMTP_PORT or 465)
+    secure = (config.SMTP_SECURE or "ssl").lower()
+    attempts = [
+        (host, port, secure, True),
+        (host, port, secure, False),
+        ("localhost", port, secure, False),
+        ("127.0.0.1", 25, "plain", False),
+    ]
+    if secure == "ssl" and port == 465:
+        attempts.append((host, 587, "tls", False))
+        attempts.append(("localhost", 587, "tls", False))
+    seen = set()
+    for h, p, mode, verify in attempts:
+        key = (h, p, mode, verify)
+        if key in seen:
+            continue
+        seen.add(key)
+        try:
+            ctx = _ssl_ctx(verify)
+            if mode == "ssl":
+                with smtplib.SMTP_SSL(h, p, timeout=20, context=ctx) as smtp:
+                    smtp.login(config.SMTP_USER, config.SMTP_PASS)
+                    smtp.sendmail(config.MAIL_FROM, [to], raw)
+            elif mode == "tls":
+                with smtplib.SMTP(h, p, timeout=20) as smtp:
+                    smtp.ehlo()
+                    smtp.starttls(context=ctx)
+                    smtp.ehlo()
+                    smtp.login(config.SMTP_USER, config.SMTP_PASS)
+                    smtp.sendmail(config.MAIL_FROM, [to], raw)
+            else:
+                with smtplib.SMTP(h, p, timeout=15) as smtp:
+                    smtp.ehlo()
+                    smtp.sendmail(config.MAIL_FROM, [to], raw)
+            return True
+        except Exception as e:
+            errors.append(f"{mode} {h}:{p} verify={verify} {type(e).__name__}: {e}")
+    return False
+
+
+def _sendmail(raw: str, errors) -> bool:
+    import subprocess
+
+    sendmail = "/usr/sbin/sendmail"
+    if not os.path.exists(sendmail):
+        errors.append("sendmail missing")
         return False
+    try:
+        proc = subprocess.run(
+            [sendmail, "-t", "-oi", "-f", config.MAIL_FROM],
+            input=raw.encode("utf-8"),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=20,
+            check=False,
+        )
+        if proc.returncode == 0:
+            return True
+        err = (proc.stderr or b"").decode("utf-8", "replace").strip()
+        errors.append(f"sendmail exit {proc.returncode} {err}")
+    except Exception as e:
+        errors.append(f"sendmail {type(e).__name__}: {e}")
+    return False
 
 
 def load_json(path, default):

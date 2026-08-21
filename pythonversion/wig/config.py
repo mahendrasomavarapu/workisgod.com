@@ -29,25 +29,51 @@ DATA_DIR = PHP_ROOT / "data"
 DB_PATH = DATA_DIR / "app.sqlite"
 
 
+def _unquote_php(raw: str, quote: str) -> str:
+    if quote == "'":
+        return raw.replace("\\'", "'").replace("\\\\", "\\")
+    return (
+        raw.replace("\\\"", '"')
+        .replace("\\'", "'")
+        .replace("\\\\", "\\")
+        .replace("\\n", "\n")
+        .replace("\\t", "\t")
+    )
+
+
 def _parse_php_defines(text: str) -> dict[str, str]:
+    """Read define('KEY', 'val') / define('KEY', \"val\") / define('KEY', 465)."""
     out: dict[str, str] = {}
-    for m in re.finditer(
-        r"define\(\s*'([A-Z0-9_]+)'\s*,\s*'((?:\\'|[^'])*)'\s*\)",
-        text,
-    ):
-        out[m.group(1)] = m.group(2).replace("\\'", "'")
+    pattern = re.compile(
+        r"define\(\s*['\"]([A-Z0-9_]+)['\"]\s*,\s*"
+        r"(?:'((?:\\'|[^'])*)'|\"((?:\\\"|[^\"])*)\"|([0-9]+))\s*\)",
+        re.MULTILINE,
+    )
+    for m in pattern.finditer(text):
+        key = m.group(1)
+        if m.group(2) is not None:
+            out[key] = _unquote_php(m.group(2), "'")
+        elif m.group(3) is not None:
+            out[key] = _unquote_php(m.group(3), '"')
+        else:
+            out[key] = m.group(4) or ""
     return out
 
 
 def load() -> None:
-    global SITE_URL, MAIL_FROM, SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS
-    local = PHP_ROOT / "config.local.php"
-    if local.is_file():
-        defs = _parse_php_defines(local.read_text(encoding="utf-8", errors="replace"))
-        SMTP_PASS = defs.get("SMTP_PASS", SMTP_PASS)
+    global SITE_URL, MAIL_FROM, MAIL_FROM_NAME, SMTP_HOST, SMTP_PORT, SMTP_SECURE, SMTP_USER, SMTP_PASS
+    for name in ("config.php", "config.local.php"):
+        path = PHP_ROOT / name
+        if not path.is_file():
+            continue
+        defs = _parse_php_defines(path.read_text(encoding="utf-8", errors="replace"))
+        if defs.get("SMTP_PASS"):
+            SMTP_PASS = defs["SMTP_PASS"]
         MAIL_FROM = defs.get("MAIL_FROM", MAIL_FROM)
+        MAIL_FROM_NAME = defs.get("MAIL_FROM_NAME", MAIL_FROM_NAME)
         SMTP_HOST = defs.get("SMTP_HOST", SMTP_HOST)
         SMTP_USER = defs.get("SMTP_USER", SMTP_USER)
+        SMTP_SECURE = (defs.get("SMTP_SECURE") or SMTP_SECURE).lower()
         if defs.get("SMTP_PORT"):
             try:
                 SMTP_PORT = int(defs["SMTP_PORT"])
