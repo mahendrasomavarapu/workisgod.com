@@ -4,6 +4,7 @@
 User-agent: *
 Allow: /
 Allow: /about.php
+Allow: /news
 Allow: /tools.php
 Allow: /safety.php
 Allow: /resumes/
@@ -25,6 +26,7 @@ Disallow: /config.local.php
 
 User-agent: GPTBot
 Allow: /about.php
+Allow: /news
 Allow: /tools.php
 Allow: /safety.php
 Allow: /resumes/
@@ -35,6 +37,7 @@ Disallow: /data/
 
 User-agent: ChatGPT-User
 Allow: /about.php
+Allow: /news
 Allow: /tools.php
 Allow: /safety.php
 Allow: /resumes/
@@ -42,6 +45,7 @@ Allow: /llms.txt
 
 User-agent: Google-Extended
 Allow: /about.php
+Allow: /news
 Allow: /tools.php
 Allow: /safety.php
 Allow: /resumes/
@@ -49,6 +53,7 @@ Allow: /llms.txt
 
 User-agent: ClaudeBot
 Allow: /about.php
+Allow: /news
 Allow: /tools.php
 Allow: /safety.php
 Allow: /resumes/
@@ -58,6 +63,7 @@ Disallow: /data/
 
 User-agent: PerplexityBot
 Allow: /about.php
+Allow: /news
 Allow: /tools.php
 Allow: /safety.php
 Allow: /resumes/
@@ -65,6 +71,7 @@ Allow: /llms.txt
 
 User-agent: Applebot-Extended
 Allow: /about.php
+Allow: /news
 Allow: /tools.php
 Allow: /safety.php
 Allow: /resumes/

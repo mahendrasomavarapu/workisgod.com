@@ -2,6 +2,9 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://workisgod.com/</loc></url>
   <url><loc>https://workisgod.com/about.php</loc></url>
+  <url><loc>https://workisgod.com/news</loc></url>
+  <url><loc>https://workisgod.com/news/telecom</loc></url>
+  <url><loc>https://workisgod.com/news/banking</loc></url>
   <url><loc>https://workisgod.com/tools.php</loc></url>
   <url><loc>https://workisgod.com/safety.php</loc></url>
   <url><loc>https://workisgod.com/login.php</loc></url>

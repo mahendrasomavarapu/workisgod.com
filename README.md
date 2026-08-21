@@ -8,6 +8,7 @@ A small PHP site for [workisgod.com](https://workisgod.com):
 4. Pick a Gen Z or millennial theme
 5. Share a stable URL: `/resumes/your-name`
 6. Use twenty browser-only ops tools at `/tools.php` (curl, jq, openssl stand-ins)
+7. Read technical news at `/news/telecom` and `/news/banking`
 
 No Node, no Composer, no database server. SQLite lives under `data/` (not in git).
 

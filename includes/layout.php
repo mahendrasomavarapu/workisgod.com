@@ -73,6 +73,7 @@ function render_header(string $title, array $opts = []): void
     <a class="wordmark" href="/"><?= h(SITE_NAME) ?></a>
     <nav>
         <a href="/about.php">About</a>
+        <a href="/news">News</a>
         <a href="/tools.php">Tools</a>
         <a href="/safety.php">Safety</a>
         <label class="sr-only" for="site-theme">Site theme</label>
@@ -105,7 +106,7 @@ function render_footer(array $opts = []): void
     ?>
 <footer class="site-footer">
     <p><?= h(SITE_NAME) ?> · your work is received with care</p>
-    <p class="fine"><a href="/about.php">About</a> · <a href="/tools.php">Tools</a> · <a href="/safety.php">Safety</a> · <a href="/llms.txt">llms.txt</a></p>
+    <p class="fine"><a href="/about.php">About</a> · <a href="/news">News</a> · <a href="/tools.php">Tools</a> · <a href="/safety.php">Safety</a> · <a href="/llms.txt">llms.txt</a></p>
 </footer>
 <script src="<?= h(asset_url('/assets/js/app.js')) ?>"></script>
 <?php

@@ -23,6 +23,7 @@ render_header('About', [
         <li>Optionally run a free AI agent to rewrite the draft, including a harder-thinking pass.</li>
         <li>Choose site and resume themes aimed at Gen Z and millennial palettes, plus quieter classic looks.</li>
         <li>Publish at <code>https://workisgod.com/resumes/your-name</code>.</li>
+        <li>Read <a href="/news">technical news</a> for telecom and banking. Each item is a highlight plus a link to the original publisher.</li>
         <li>Use the public <a href="/tools.php">Tools</a> bench for daily ops work — JSON, Base64, hashes, JWT, regex, CIDR, PEM, and a curl builder. They run in your browser; we do not receive the text.</li>
     </ul>
 

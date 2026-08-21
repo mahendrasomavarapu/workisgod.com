@@ -15,6 +15,7 @@ require __DIR__ . '/moderate.php';
 require __DIR__ . '/capture.php';
 require __DIR__ . '/layout.php';
 require __DIR__ . '/toolset.php';
+require __DIR__ . '/news.php';
 
 ini_set('display_errors', '0');
 ini_set('log_errors', '1');
